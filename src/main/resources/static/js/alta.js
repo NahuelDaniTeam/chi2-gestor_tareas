@@ -6,7 +6,7 @@
 import { api } from "./api.js";
 import { interpretar } from "./atajos.js";
 import { avisar } from "./dom.js";
-import { HORIZONTES } from "./formato.js";
+import { dondeQuedo, rutaDeTarea } from "./formato.js";
 
 /**
  * @param contexto {horizonteVista, fechaAlta, hoy}
@@ -57,7 +57,9 @@ export function iniciarAlta(contexto, alGuardar) {
 			titulo.value = "";
 			actualizar();
 			const visible = await alGuardar(nueva);
-			if (!visible) avisar(`Guardada en ${HORIZONTES[nueva.horizonte]}.`);
+			if (!visible) {
+				avisar(`Guardada en ${dondeQuedo(nueva, contexto.hoy)}.`, { enlace: { texto: "Ver", href: rutaDeTarea(nueva) } });
+			}
 		} catch (error) {
 			avisar(error.primerMensaje ?? error.message, { error: true });
 		} finally {

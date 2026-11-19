@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { etiquetaFecha, resumen, separarFinalizadas } from "../../main/resources/static/js/formato.js";
+import { dondeQuedo, etiquetaFecha, resumen, rutaDeTarea, separarFinalizadas } from "../../main/resources/static/js/formato.js";
 
 const HOY = { horizonteVista: "DIA", fechaVista: "2026-11-19", hoy: "2026-11-19" };
 const SEMANA = { horizonteVista: "SEMANA", fechaVista: "2026-11-16", hoy: "2026-11-19" };
@@ -45,4 +45,21 @@ test("separa las finalizadas sin cambiar el orden de la API", () => {
 	const b = { id: "b", estado: "FINALIZADA" };
 	const c = { id: "c", estado: "EN_CURSO" };
 	assert.deepEqual(separarFinalizadas([a, b, c]), { abiertas: [a, c], finalizadas: [b] });
+});
+
+test("una tarea creada en otra vista sabe dónde quedó y cómo llegar", () => {
+	const semana = { horizonte: "SEMANA", fechaReferencia: "2026-11-16" };
+	assert.equal(rutaDeTarea(semana), "/semana?fecha=2026-11-16");
+	assert.equal(dondeQuedo(semana, "2026-11-19"), "la semana del 16 nov");
+
+	const mes = { horizonte: "MES", fechaReferencia: "2026-12-01" };
+	assert.equal(rutaDeTarea(mes), "/mes?fecha=2026-12-01");
+	assert.equal(dondeQuedo(mes, "2026-11-19"), "diciembre de 2026");
+
+	const largo = { horizonte: "LARGO_PLAZO", fechaReferencia: null };
+	assert.equal(rutaDeTarea(largo), "/largo-plazo");
+	assert.equal(dondeQuedo(largo, "2026-11-19"), "Largo plazo");
+
+	assert.equal(rutaDeTarea({ horizonte: "DIA", fechaReferencia: "2026-11-19" }), "/");
+	assert.equal(dondeQuedo({ horizonte: "DIA", fechaReferencia: "2026-11-19" }, "2026-11-19"), "Hoy");
 });

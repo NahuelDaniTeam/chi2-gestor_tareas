@@ -32,7 +32,8 @@
 	</section>
 
 	<!-- Alta rápida (§4.2) -->
-	<form id="alta" class="alta" autocomplete="off">
+	<!-- onsubmit: si se aprieta Enter antes de que cargue el JS, el navegador no recarga la página y el texto no se pierde -->
+	<form id="alta" class="alta" autocomplete="off" onsubmit="event.preventDefault()">
 		<div class="flex items-center gap-3 px-4 pt-3 sm:px-5">
 			<svg th:replace="~{fragments/layout :: icono('mas', 'size-5 shrink-0 text-tenue')}"></svg>
 			<label for="alta-titulo" class="sr-only">Nueva tarea</label>

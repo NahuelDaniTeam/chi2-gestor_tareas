@@ -41,13 +41,25 @@ export function atraparFoco(contenedor, evento) {
 let temporizadorAviso;
 
 /** Aviso breve abajo al centro. */
-export function avisar(mensaje, { error = false } = {}) {
+/**
+ * Aviso breve abajo al centro. Con {@code enlace} ({texto, href}) dura más y suma un enlace,
+ * por ejemplo para ir a la vista donde quedó una tarea recién creada.
+ */
+export function avisar(mensaje, { error = false, enlace = null } = {}) {
 	const aviso = document.getElementById("aviso");
-	aviso.replaceChildren(icono(error ? "alerta" : "check", "size-4 shrink-0"), el("span", null, mensaje));
+	const accion = enlace
+		? el("a", "ml-2 font-medium underline decoration-fondo/40 underline-offset-4 hover:decoration-fondo", enlace.texto)
+		: null;
+	if (accion) accion.href = enlace.href;
+	aviso.replaceChildren(icono(error ? "alerta" : "check", "size-4 shrink-0"), el("span", null, mensaje), accion);
 	aviso.dataset.tipo = error ? "error" : "ok";
 	aviso.hidden = false;
 	clearTimeout(temporizadorAviso);
-	temporizadorAviso = setTimeout(() => { aviso.hidden = true; }, 3200);
+	const ocultar = () => { temporizadorAviso = setTimeout(() => { aviso.hidden = true; }, enlace ? 7000 : 3200); };
+	// Mientras el mouse está encima, el aviso no se va
+	aviso.onmouseenter = () => clearTimeout(temporizadorAviso);
+	aviso.onmouseleave = ocultar;
+	ocultar();
 }
 
 export function leerPreferencia(clave, porDefecto) {

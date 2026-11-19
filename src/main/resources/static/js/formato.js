@@ -73,6 +73,26 @@ function plural(n, uno, varios) {
 	return `${n} ${n === 1 ? uno : varios}`;
 }
 
+/** Vista donde se ve una tarea (para el enlace "Ver" después de crearla en otra vista). */
+export function rutaDeTarea({ horizonte, fechaReferencia }) {
+	switch (horizonte) {
+		case "SEMANA": return `/semana?fecha=${fechaReferencia}`;
+		case "MES": return `/mes?fecha=${fechaReferencia}`;
+		case "LARGO_PLAZO": return "/largo-plazo";
+		default: return "/";
+	}
+}
+
+/** "la semana del 16 nov", "noviembre de 2026", "largo plazo": dónde quedó una tarea. */
+export function dondeQuedo({ horizonte, fechaReferencia }, hoy) {
+	switch (horizonte) {
+		case "SEMANA": return "la semana del " + DIA_MES.format(aFecha(fechaReferencia));
+		case "MES": return MES.format(aFecha(fechaReferencia));
+		case "LARGO_PLAZO": return "Largo plazo";
+		default: return fechaReferencia === hoy ? "Hoy" : DIA.format(aFecha(fechaReferencia)).replace(",", "");
+	}
+}
+
 /** Abiertas en el orden que manda la API (prioridad) y finalizadas aparte, al final. */
 export function separarFinalizadas(tareas) {
 	return {
