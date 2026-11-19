@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${vista.etiqueta})}"></head>
+<body class="bg-fondo font-sans text-tinta antialiased">
+<header th:replace="~{fragments/layout :: encabezado}"></header>
+
+<main id="app" class="contenedor pb-24"
+      th:data-url-lista="${urlLista}"
+      th:data-vista="${vista.name()}"
+      th:data-horizonte="${vista.horizonte.name()}"
+      th:data-fecha-alta="${fechaAlta}"
+      th:data-hoy="${hoy}">
+
+	<!-- Cabecera: vista, período y navegación -->
+	<section class="flex flex-wrap items-end justify-between gap-6 pt-12 pb-8 sm:pt-16">
+		<div>
+			<p class="etiqueta" th:text="${vista.etiqueta}">Hoy</p>
+			<h1 class="titulo-display mt-5 text-5xl sm:text-6xl" th:text="${periodo.titulo}">Jueves 19 de noviembre</h1>
+		</div>
+		<div class="flex items-center gap-2" th:if="${urlAnterior}">
+			<a th:href="@{${urlActual}}" th:if="${urlActual}" class="mr-2 text-sm text-tenue underline decoration-linea decoration-2 underline-offset-6 hover:text-tinta hover:decoration-acento"
+			   th:text="${vista.horizonte.name() == 'SEMANA'} ? 'Esta semana' : 'Este mes'">Esta semana</a>
+			<a th:href="@{${urlAnterior}}" class="boton-redondo" aria-label="Período anterior" title="Anterior">←</a>
+			<a th:href="@{${urlSiguiente}}" class="boton-redondo" aria-label="Período siguiente" title="Siguiente">→</a>
+		</div>
+	</section>
+
+	<!-- Alta rápida (§4.2): foco al abrir, Enter guarda, el campo queda vacío y enfocado -->
+	<form id="alta" class="rounded-2xl border border-linea bg-superficie p-3 transition focus-within:border-tinta/30 sm:p-4" autocomplete="off">
+		<label for="alta-titulo" class="sr-only">Nueva tarea</label>
+		<input id="alta-titulo" name="titulo" maxlength="200" autofocus
+		       class="w-full bg-transparent px-2 py-2 text-lg outline-none placeholder:text-tenue/70"
+		       placeholder="Nueva tarea y Enter">
+		<div class="mt-2 flex flex-wrap items-center gap-2 px-1">
+			<label class="sr-only" for="alta-horizonte">Horizonte</label>
+			<select id="alta-horizonte" class="selector">
+				<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}"
+				        th:selected="${h == vista.horizonte}">Día</option>
+			</select>
+			<label class="sr-only" for="alta-prioridad">Prioridad</label>
+			<select id="alta-prioridad" class="selector">
+				<option th:each="p : ${prioridades}" th:value="${p.name()}" th:text="'Prioridad ' + ${#strings.toLowerCase(p.etiqueta)}"
+				        th:selected="${p.name() == 'MEDIA'}">Prioridad media</option>
+			</select>
+			<span id="alta-vista-previa" class="text-xs text-tenue" aria-live="polite"></span>
+			<span class="ml-auto hidden text-xs text-tenue/80 sm:inline">
+				Atajos: <kbd>!a</kbd> <kbd>!m</kbd> <kbd>!b</kbd> prioridad · <kbd>@d</kbd> <kbd>@s</kbd> <kbd>@m</kbd> <kbd>@l</kbd> horizonte
+			</span>
+		</div>
+	</form>
+
+	<!-- Modo de visualización -->
+	<div class="mt-10 flex items-center justify-between gap-4">
+		<p id="resumen" class="text-sm text-tenue" aria-live="polite"></p>
+		<div class="flex rounded-full border border-linea bg-superficie p-1 text-sm" role="group" aria-label="Modo">
+			<button type="button" class="pestana" data-modo="lista">Lista</button>
+			<button type="button" class="pestana" data-modo="tablero">Tablero</button>
+		</div>
+	</div>
+
+	<!-- Lista ordenada por prioridad -->
+	<section id="lista" class="mt-6" aria-label="Lista de tareas" hidden></section>
+
+	<!-- Tablero por estado (§4.4): las tarjetas se arrastran entre columnas -->
+	<section id="tablero" class="mt-6 grid gap-6 md:grid-cols-3" aria-label="Tablero" hidden>
+		<div th:each="e : ${estados}">
+			<h2 class="flex items-center justify-between border-b border-linea pb-3 text-xs font-medium tracking-[0.2em] text-tenue uppercase">
+				<span th:text="${e.etiqueta}">Pendiente</span>
+				<span class="font-sans tracking-normal" th:data-contador="${e.name()}">0</span>
+			</h2>
+			<div class="columna mt-3" th:data-estado="${e.name()}"></div>
+		</div>
+	</section>
+
+	<p id="vacio" class="mt-6 rounded-2xl border border-dashed border-linea px-6 py-14 text-center text-tenue" hidden>
+		Nada por acá. Escribí una tarea arriba y apretá Enter.
+	</p>
+</main>
+
+<!-- Panel lateral de edición: todo se guarda al instante, sin botón de guardar (§3) -->
+<div id="panel-fondo" class="fixed inset-0 z-30 bg-tinta/20" hidden></div>
+<aside id="panel" class="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col overflow-y-auto border-l border-linea bg-fondo p-6 shadow-2xl sm:p-8"
+       aria-labelledby="panel-titulo-label" role="dialog" aria-modal="true" hidden>
+	<div class="flex items-center justify-between">
+		<p class="etiqueta" id="panel-titulo-label">Tarea</p>
+		<div class="flex items-center gap-3">
+			<span id="panel-guardado" class="text-xs text-tenue" aria-live="polite"></span>
+			<button type="button" class="boton-redondo" data-cerrar aria-label="Cerrar">✕</button>
+		</div>
+	</div>
+	<form id="panel-form" class="mt-6 flex flex-col gap-5" autocomplete="off">
+		<div>
+			<label for="p-titulo" class="sr-only">Título</label>
+			<textarea id="p-titulo" name="titulo" rows="2" maxlength="200" required
+			          class="w-full resize-none bg-transparent font-display text-3xl leading-tight outline-none"></textarea>
+		</div>
+		<div>
+			<label for="p-descripcion" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Descripción</label>
+			<textarea id="p-descripcion" name="descripcion" rows="4" maxlength="2000" class="campo mt-2" placeholder="Opcional"></textarea>
+		</div>
+		<div class="grid grid-cols-2 gap-4">
+			<div>
+				<label for="p-estado" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Estado</label>
+				<select id="p-estado" name="estado" class="campo mt-2">
+					<option th:each="e : ${estados}" th:value="${e.name()}" th:text="${e.etiqueta}">Pendiente</option>
+				</select>
+			</div>
+			<div>
+				<label for="p-prioridad" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Prioridad</label>
+				<select id="p-prioridad" name="prioridad" class="campo mt-2">
+					<option th:each="p : ${prioridades}" th:value="${p.name()}" th:text="${p.etiqueta}">Media</option>
+				</select>
+			</div>
+			<div>
+				<label for="p-horizonte" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Horizonte</label>
+				<select id="p-horizonte" name="horizonte" class="campo mt-2">
+					<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}">Día</option>
+				</select>
+			</div>
+			<div>
+				<label for="p-fecha" id="p-fecha-label" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Fecha</label>
+				<input id="p-fecha" name="fechaReferencia" type="date" class="campo mt-2">
+			</div>
+		</div>
+		<p id="p-error" class="text-sm text-acento" role="alert" hidden></p>
+		<p id="p-meta" class="text-xs leading-relaxed text-tenue"></p>
+	</form>
+	<div class="mt-auto border-t border-linea pt-6">
+		<button type="button" id="p-eliminar" class="text-sm text-tenue underline decoration-linea underline-offset-4 hover:text-acento hover:decoration-acento">Eliminar tarea</button>
+		<div id="p-confirmar" class="flex flex-wrap items-center gap-3" hidden>
+			<span class="text-sm">¿Eliminar esta tarea? No se puede deshacer.</span>
+			<button type="button" id="p-confirmar-si" class="rounded-full bg-acento px-4 py-1.5 text-sm font-medium text-superficie">Sí, eliminar</button>
+			<button type="button" id="p-confirmar-no" class="text-sm text-tenue hover:text-tinta">Cancelar</button>
+		</div>
+	</div>
+</aside>
+
+<!-- Avisos breves -->
+<div id="aviso" class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-tinta px-5 py-2.5 text-sm text-fondo shadow-lg" role="status" hidden></div>
+
+<script th:src="@{/js/tareas.js}" defer></script>
+</body>
+</html>

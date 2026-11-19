@@ -1,0 +1,187 @@
+# CHI2 · Gestor de tareas personal
+
+Aplicación de uso diario para planificar tareas personales por día, semana, mes y largo plazo, con prioridades. Se abre desde la computadora sin pasos extra. Primero funciona para uso personal y después permite crear grupos (por ejemplo, el equipo de la tesis de la facultad) con tareas compartidas.
+
+Este documento describe la **funcionalidad**. El stack técnico y la estructura del repositorio se toman del proyecto local de CHI2 en Orca (el web principal): si hay diferencias con la sección 8, prevalece el repositorio.
+
+**Estado:** MVP (etapa 1) implementado. Los ajustes hechos al programarlo están en la §12.
+**Última actualización:** 2026-11-19
+**Referencias:** `CLAUDE.md` · `PENDIENTES.md`
+
+---
+
+## 1. Identidad
+
+- **Nombre del módulo:** Gestor de tareas (módulo `gestion-tareas` dentro de CHI2).
+- **Etapa 1:** uso personal, un solo usuario.
+- **Etapa 2:** grupos de usuarios con tareas compartidas (equipo de la tesis).
+- **Etapa futura:** producto a medida para vender, si la base se adapta.
+- **Tono visual:** sobrio y editorial, igual que el web principal. Fondo claro, tipografía clara, sin elementos genéricos de plantilla. Paleta, tipografías y logo: **heredados del web principal** (provisorios allá, `PENDIENTES.md` 6).
+
+## 2. Objetivo
+
+Que el uso diario sea simple: abrir la aplicación, ver qué hay para hoy, cargar tareas en segundos y tener una vista clara de la semana, el mes y lo que queda a largo plazo.
+
+## 3. Uso diario
+
+- La aplicación se abre desde un acceso directo en el escritorio o la barra de tareas, en el navegador, sin login en la etapa personal (`scripts/abrir-tareas.cmd`, ver `README.md`). También se puede "instalar" desde Chrome o Edge como app de escritorio.
+- Al abrir, la pantalla principal muestra **Hoy**: tareas del día ordenadas por prioridad.
+- Carga de una tarea en menos de cinco segundos: el foco queda en el campo de alta al abrir.
+- Todo lo que se mueve (estado, prioridad, fecha) se guarda al instante, sin botón de guardar.
+- Funciona con la computadora encendida y, si se puede, se inicia sola al prender el equipo (opcional, `PENDIENTES.md` 4).
+
+## 4. Funcionalidad del MVP (etapa 1)
+
+### 4.1 Tareas
+
+- **Título** (obligatorio, hasta 200 caracteres), **descripción** (opcional, hasta 2000).
+- **Horizonte:** `DIA`, `SEMANA`, `MES` o `LARGO_PLAZO`.
+- **Fecha de referencia:** según horizonte. Día: la fecha. Semana: el primer día de la semana (lunes). Mes: el primer día del mes. Largo plazo: sin fecha obligatoria, con fecha límite opcional. Se puede mandar cualquier día del período: el sistema la lleva a la fecha de referencia.
+- **Prioridad:** `ALTA`, `MEDIA` o `BAJA`. Por defecto, `MEDIA`.
+- **Estado:** `PENDIENTE`, `EN_CURSO`, `FINALIZADA`.
+- Registro de creación, última modificación y fecha de finalización.
+- Una tarea está **vencida** si no está finalizada y su período (o su fecha límite) ya terminó.
+
+### 4.2 Alta rápida
+
+- Un campo de texto, con foco al abrir la aplicación.
+- Enter guarda la tarea con los valores por defecto: horizonte de la vista activa (en Hoy, `DIA` con la fecha de hoy) y prioridad `MEDIA`.
+- Atajos para cambiar horizonte y prioridad sin el mouse, escritos en el mismo texto (propuesta, `PENDIENTES.md` 2):
+  - prioridad: `!a` (alta), `!m` (media), `!b` (baja);
+  - horizonte: `@d` (día), `@s` (semana), `@m` (mes), `@l` (largo plazo).
+  - Ejemplo: `Entregar capítulo 2 !a @s` guarda "Entregar capítulo 2", prioridad alta, en esta semana.
+  - También se pueden elegir con los dos selectores debajo del campo.
+- Después de guardar, el campo queda vacío y enfocado.
+- Fuera del campo, `n` o `/` vuelven a enfocarlo.
+
+### 4.3 Vistas de planificación
+
+Cada vista muestra tareas de su horizonte, ordenadas por prioridad, luego por fecha (sin fecha al final) y luego por antigüedad:
+
+- **Hoy:** tareas del día actual (y las de largo plazo cuya fecha límite es hoy), más las vencidas sin terminar de cualquier horizonte, marcadas como "Vencida".
+- **Semana:** tareas de la semana elegida (lunes a domingo), con navegación a la semana anterior y siguiente.
+- **Mes:** tareas del mes elegido, con navegación por mes.
+- **Largo plazo:** todas las tareas de largo plazo, agrupadas por prioridad en la lista.
+
+Cada vista se puede ver como **lista** (con casilla para finalizar) o como **tablero**. El modo elegido se recuerda en ese navegador.
+
+### 4.4 Tablero
+
+- Columnas por estado: `PENDIENTE`, `EN_CURSO`, `FINALIZADA`.
+- Las tarjetas se arrastran entre columnas. Al soltarlas, el estado cambia y se guarda.
+- El tablero respeta el filtro de la vista activa (Hoy, Semana, Mes o Largo plazo).
+- Cada tarjeta muestra título, prioridad (con color discreto) y fecha.
+- Edición de título, descripción, estado, horizonte, fecha y prioridad desde un panel lateral, que se abre al hacer clic en la tarjeta. Se guarda al instante (los textos, al salir del campo).
+- Eliminación con confirmación dentro del panel.
+
+### 4.5 Prioridades
+
+- Tres niveles: `ALTA`, `MEDIA`, `BAJA`.
+- Dentro de cada vista, las tareas de prioridad alta aparecen primero.
+- Las tareas de prioridad alta se distinguen con un punto y un filete en terracota (el acento de la marca); media, con un punto gris; baja, con un punto solo de contorno.
+
+## 5. Etapa 2: grupos (después del MVP personal)
+
+- Un usuario puede **crear grupos** (por ejemplo, "Tesis") e invitar a otros usuarios.
+- Cada miembro tiene un rol: `ADMIN` (invita, edita el grupo y elimina tareas de cualquiera) o `MIEMBRO` (crea y gestiona sus tareas de grupo).
+- Una tarea pertenece a un **ámbito**: `PERSONAL` o un `GRUPO` concreto.
+- Las tareas de grupo son visibles para todos los miembros del grupo.
+- Las tareas personales solo las ve su dueño.
+- **Filtro de visualización** en todas las vistas (Hoy, Semana, Mes, Largo plazo, tablero):
+  - **Solo personales.**
+  - **Solo de un grupo** (elegido en el selector).
+  - **Todas:** personales más las de todos los grupos del usuario.
+- Opcional en esta etapa: asignar una tarea de grupo a un miembro concreto (`asignado_a`).
+
+## 6. Fuera de alcance del MVP
+
+- Recordatorios y notificaciones.
+- Tareas recurrentes.
+- Subtareas y etiquetas.
+- Adjuntos.
+- Edición en tiempo real entre usuarios (los cambios se ven al recargar; la lista también se recarga al volver a la ventana).
+- App nativa. La API REST ya queda preparada para sumarla más adelante.
+
+## 7. Modelo de datos
+
+Tabla `tarea` (migración `V1__tarea.sql`):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `id` | UUID | Clave primaria |
+| `titulo` | texto, obligatorio | Máximo 200 caracteres |
+| `descripcion` | texto, opcional | Máximo 2000 caracteres |
+| `horizonte` | enum | `DIA`, `SEMANA`, `MES`, `LARGO_PLAZO` |
+| `fecha_referencia` | fecha, opcional | Según horizonte; obligatoria salvo en `LARGO_PLAZO` (restricción en la base) |
+| `prioridad` | enum | `ALTA`, `MEDIA`, `BAJA` |
+| `estado` | enum | `PENDIENTE`, `EN_CURSO`, `FINALIZADA` |
+| `ambito` | enum | `PERSONAL`, `GRUPO` |
+| `usuario_id` | UUID | Creador / dueño |
+| `grupo_id` | UUID, opcional | Obligatorio si `ambito = GRUPO` (restricción en la base) |
+| `asignado_a` | UUID, opcional | Etapa 2 |
+| `creada_en`, `actualizada_en` | timestamp | En UTC |
+| `completada_en` | timestamp, opcional | Se completa al pasar a `FINALIZADA` y se borra si vuelve atrás (restricción en la base) |
+
+Etapa 2 agrega las tablas `grupo` y `miembro_grupo` (grupo, usuario y rol) y las claves foráneas de `grupo_id` y `asignado_a`. El modelo queda preparado desde el MVP con `usuario_id` y `ambito`, para no rehacer la base.
+
+Los cambios de esquema se hacen con migraciones Flyway, nunca a mano.
+
+## 8. Stack y estructura técnica
+
+- El mismo stack que el web principal de CHI2: Java 21, Spring Boot, Thymeleaf, Tailwind CSS, PostgreSQL con Flyway, JUnit 5 y Testcontainers, Maven (detalle en `CLAUDE.md`).
+- El backend se expone como **API REST** desde el inicio. La interfaz web consume esa misma API: Thymeleaf arma el marco de cada vista y el navegador trae las tareas de `/api/tareas`.
+- Arrastre de tarjetas: arrastrar y soltar nativo de HTML5 con JavaScript propio (`static/js/tareas.js`), sin librerías (propuesta, `PENDIENTES.md` 1).
+- Corre en el puerto **8082**, para poder tenerla abierta junto con el web principal (8080) y peluquería (8081).
+
+Endpoints del MVP:
+
+| Método y ruta | Qué hace | Respuesta |
+|---|---|---|
+| `GET /api/tareas?horizonte=&fecha=&prioridad=&estado=` | Tareas de un horizonte en el período que contiene a `fecha` (hoy si falta). En `LARGO_PLAZO`, todas. `prioridad` y `estado` filtran. | 200 |
+| `GET /api/tareas/hoy?prioridad=&estado=` | Vista Hoy (§4.3). | 200 |
+| `GET /api/tareas/{id}` | Una tarea. | 200 / 404 |
+| `POST /api/tareas` | Alta. Cuerpo: `titulo`, `descripcion`, `horizonte`, `fechaReferencia`, `prioridad`. Sin fecha (salvo largo plazo), se usa hoy; sin prioridad, `MEDIA`. | 201 / 400 |
+| `PUT /api/tareas/{id}` | Edición completa, mismo cuerpo que el alta. | 200 / 400 / 404 |
+| `PATCH /api/tareas/{id}/estado` | `{ "estado": "FINALIZADA" }` | 200 / 400 / 404 |
+| `PATCH /api/tareas/{id}/prioridad` | `{ "prioridad": "ALTA" }` | 200 / 400 / 404 |
+| `DELETE /api/tareas/{id}` | Elimina. | 204 / 404 |
+
+Los errores vuelven como `ProblemDetail`; los de validación, con un mapa `errores` por campo. Una tarea de otro usuario responde 404, igual que una inexistente.
+
+Etapa 2 suma los endpoints de grupos y miembros y el parámetro `ambito` en los listados.
+
+## 9. Pruebas
+
+Implementadas (`./mvnw verify`):
+
+- Unitarias: cálculo de fecha de referencia y fin de período por horizonte (`HorizonteTest`), transiciones de estado, `completada_en` y vencimiento (`TareaTest`), orden por prioridad (`OrdenTareasTest`), "hoy" en hora argentina y títulos de período (`CalendarioTest`).
+- Controladores con el service simulado: API (`TareaApiControllerTest`) y páginas (`TareaPaginaControllerTest`).
+- Integración de la API con PostgreSQL real (`TareaIntegracionTest`, Testcontainers): alta rápida, vista Hoy con vencidas, semana, mes, largo plazo, arrastre a finalizada, edición, eliminación y que no se vean tareas de otro usuario.
+
+Pendiente:
+
+- Etapa 2: pruebas de permisos (un miembro no ve tareas personales de otro, un `MIEMBRO` no elimina tareas ajenas).
+- Prueba manual del arrastre y del alta rápida en al menos dos navegadores (`PENDIENTES.md` 7).
+
+## 10. Decisiones tomadas
+
+- El gestor de tareas es un módulo de CHI2, separado del web principal (repositorio propio).
+- Primero se usa en forma personal, después con grupos.
+- Horizontes: día, semana, mes y largo plazo.
+- Prioridades: alta, media y baja.
+- El tablero usa los estados pendiente, en curso y finalizada.
+- En grupos, las tareas de grupo son visibles para todos los miembros; las personales, solo para su dueño.
+- El backend es API REST desde el inicio.
+- "Hoy" se calcula en hora de Argentina (`chi2.tareas.zona`); todo se guarda en UTC.
+
+## 11. Pendientes
+
+Los pendientes se registran solo en `PENDIENTES.md`. Los que salen de este documento son: arrastre (1), atajos (2), inicio de semana (3), inicio automático (4), bocetos en Figma (5), paleta y tipografía (6), prueba en dos navegadores (7), login para grupos (8) y asignación de tareas de grupo (9).
+
+## 12. Ajustes hechos al programar el MVP
+
+- **El alta rápida usa el horizonte de la vista activa.** En Hoy es `DIA` con fecha de hoy, como pedía la especificación; en Semana o Mes, la tarea va al período que se está mirando, y en Largo plazo, sin fecha. Así, cargar desde la vista de la semana que viene no obliga a cambiar nada.
+- **Hoy incluye las vencidas de cualquier horizonte,** no solo las del día: una tarea de la semana pasada sin terminar también aparece, marcada como "Vencida". Y las de largo plazo con fecha límite hoy.
+- **Lista y tablero en todas las vistas.** La especificación pedía ambas cosas; se resolvió con un selector Lista / Tablero.
+- **Fecha opcional en la API:** si no viene (salvo largo plazo), se usa hoy. Simplifica el alta desde una app nativa.
+- **Sin login en la etapa 1:** todas las tareas son de un usuario fijo (`chi2.tareas.usuario-local`), detrás de la interfaz `UsuarioActual` que la etapa 2 reemplaza por el usuario logueado.

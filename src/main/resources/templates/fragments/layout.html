@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title th:text="${titulo} + ' · Tareas CHI2'">Tareas CHI2</title>
+	<meta name="theme-color" content="#f7f4ee">
+	<link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+	<link rel="apple-touch-icon" th:href="@{/apple-touch-icon.png}">
+	<link rel="manifest" th:href="@{/site.webmanifest}">
+	<!-- Tipografías: las mismas que el web principal de CHI2 -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<!-- Isotipo χ² (logo de CHI2, igual que en el web principal). Toma el color del texto; el "2" va en gris cálido. -->
+<svg th:fragment="isotipo(clase)" th:class="${clase}" viewBox="10 11 44 41" fill="none" stroke-linecap="round" aria-hidden="true">
+	<g transform="translate(-3 0)">
+		<path d="M16 17C22 17 25 24 30 33S38 49 44 49" stroke="currentColor" stroke-width="4.5"/>
+		<path d="M17 48 41 18" stroke="currentColor" stroke-width="2.2"/>
+		<path d="M45.5 17.5C45.5 14.8 48 13.5 50.5 13.8 52.8 14.1 54 15.8 53.5 17.8 53 19.8 49.5 22 45.5 25.5H54"
+		      stroke="#a8a29e" stroke-width="2.2" stroke-linejoin="round"/>
+	</g>
+</svg>
+
+<!-- Logo del módulo: χ² | CHI2 · Tareas -->
+<a th:fragment="logo" th:href="@{/}" class="flex items-center gap-3 text-tinta" aria-label="Tareas CHI2, hoy">
+	<svg th:replace="~{fragments/layout :: isotipo('h-7 w-auto')}"></svg>
+	<span class="h-6 w-px bg-linea" aria-hidden="true"></span>
+	<span class="font-display text-[1.6rem] leading-none tracking-wide">CHI<em class="text-[#a8a29e]">2</em></span>
+	<span class="text-xs font-medium tracking-[0.2em] text-tenue uppercase">Tareas</span>
+</a>
+
+<!-- Encabezado: marca y vistas de planificación (§4.3) -->
+<header th:fragment="encabezado" class="sticky top-0 z-20 border-b border-linea/80 bg-fondo/85 backdrop-blur">
+	<nav class="contenedor flex flex-wrap items-center justify-between gap-x-8 gap-y-3 py-4" aria-label="Vistas">
+		<a th:replace="~{fragments/layout :: logo}"></a>
+		<ul class="-mx-1 flex gap-1 overflow-x-auto text-sm text-tenue">
+			<li th:each="v : ${vistas}">
+				<a th:href="@{${v.ruta}}" class="pestana" th:text="${v.etiqueta}"
+				   th:attr="aria-current=${v == vista} ? 'page' : null">Vista</a>
+			</li>
+		</ul>
+	</nav>
+</header>
+
+</body>
+</html>
