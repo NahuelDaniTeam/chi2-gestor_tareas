@@ -21,7 +21,7 @@ _(nada por ahora)_
 ## Para Nahuel
 
 ### 1. Confirmar el enfoque para el arrastre
-- **Contexto:** el tablero necesita arrastrar tarjetas entre columnas (`docs/01-especificacion.md` §4.4). Se implementó con **arrastrar y soltar nativo de HTML5 y JavaScript propio** (`src/main/resources/static/js/tareas.js`), sin librerías. Limitación conocida: en celulares y tablets el arrastre nativo no funciona; ahí se cambia el estado desde la casilla de la lista o desde el panel lateral. Si hace falta arrastre táctil, la alternativa es una librería liviana como SortableJS.
+- **Contexto:** el tablero necesita arrastrar tarjetas entre columnas (`docs/01-especificacion.md` §4.4). Se implementó con **arrastrar y soltar nativo de HTML5 y JavaScript propio** (`src/main/resources/static/js/render.js`), sin librerías. Limitación conocida: en celulares y tablets el arrastre nativo no funciona; ahí se cambia el estado desde la casilla de la lista o desde el panel lateral. Si hace falta arrastre táctil, la alternativa es una librería liviana como SortableJS.
 - **Qué entregar:** "queda así" o "pasar a <librería>", después de probarlo un par de días.
 - **Dónde:** `docs/01-especificacion.md` §8.
 - cargado por Nahuel, 2026-11-19
@@ -29,7 +29,7 @@ _(nada por ahora)_
 ### 2. Confirmar los atajos de teclado del alta rápida
 - **Contexto:** la especificación pedía cambiar horizonte y prioridad sin el mouse (§4.2). Se implementó como texto dentro del mismo campo: `!a` `!m` `!b` para la prioridad y `@d` `@s` `@m` `@l` para el horizonte (ejemplo: `Entregar capítulo 2 !a @s`). Se descartaron combinaciones con Alt o Ctrl porque chocan con atajos del navegador (Alt+D, Ctrl+D). Fuera del campo, `n` o `/` lo enfocan.
 - **Qué entregar:** "quedan así" o los atajos que prefieras.
-- **Dónde:** `docs/01-especificacion.md` §4.2 y `tareas.js` (constantes `ATAJOS_PRIORIDAD` y `ATAJOS_HORIZONTE`).
+- **Dónde:** `docs/01-especificacion.md` §4.2 y `static/js/atajos.js` (constantes `ATAJOS_PRIORIDAD` y `ATAJOS_HORIZONTE`, con tests en `src/test/js`).
 - cargado por Nahuel, 2026-11-19
 
 ### 3. Confirmar que la semana arranca el lunes
@@ -80,4 +80,5 @@ _(nada por ahora)_
 
 ## Hechos
 
+- [x] Terminación profesional de la interfaz: íconos propios, controles segmentados, finalizadas plegables, estados de carga y error, contador en Hoy, atajos globales con ayuda (`?`), página de error propia y JavaScript en módulos con tests (`node --test` dentro de `./mvnw verify`). · 2026-11-19
 - [x] MVP del gestor (etapa 1): tareas con horizonte, prioridad y estado; vistas Hoy, Semana, Mes y Largo plazo; lista y tablero con arrastre; alta rápida con atajos; panel de edición; API REST completa; 57 tests (unitarios, controladores e integración con Postgres). Ajustes respecto de la especificación en `docs/01-especificacion.md` §12. · 2026-11-19

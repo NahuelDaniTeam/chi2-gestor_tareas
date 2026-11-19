@@ -6,7 +6,7 @@
 
 /*
  * Tokens de marca: los mismos que el web principal de CHI2 (provisorios allá hasta cerrar su
- * PENDIENTES.md 10). Si cambian en el web, se copian acá (PENDIENTES.md de este repo).
+ * PENDIENTES.md 10). Si cambian en el web, se copian acá (PENDIENTES.md 6 de este repo).
  */
 @theme {
   --color-fondo: #f7f4ee;        /* marfil */
@@ -21,25 +21,37 @@
 }
 
 @layer base {
+  html {
+    font-feature-settings: "cv11", "ss01";
+  }
   ::selection {
     background: var(--color-acento);
     color: var(--color-superficie);
   }
   :focus-visible {
     outline: 2px solid var(--color-acento);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
   [hidden] {
     display: none !important;
+  }
+  kbd {
+    @apply inline-flex min-w-6 items-center justify-center rounded-md border border-linea border-b-2 bg-superficie px-1.5 py-0.5 font-sans text-xs text-tinta;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0s !important;
+      animation-duration: 0s !important;
+    }
   }
 }
 
 @layer components {
   .contenedor {
-    @apply mx-auto max-w-6xl px-5 sm:px-8;
+    @apply mx-auto max-w-5xl px-4 sm:px-8;
   }
 
-  /* Rótulo de sección: "— HOY" */
+  /* Rótulo de sección: "— HOY", como en el web principal */
   .etiqueta {
     @apply flex items-center gap-3 text-xs font-medium tracking-[0.2em] text-tenue uppercase;
   }
@@ -52,26 +64,105 @@
     @apply font-display leading-[1.02] tracking-tight text-balance;
   }
 
-  .pestana {
-    @apply block rounded-full px-3 py-1.5 whitespace-nowrap transition hover:bg-linea/60 hover:text-tinta;
-  }
-  .pestana[aria-current="page"] {
-    @apply bg-tinta text-fondo hover:bg-tinta hover:text-fondo;
+  /* Rótulo de campo: sin mayúsculas forzadas */
+  .rotulo {
+    @apply mb-2 block text-sm font-medium text-tinta;
   }
 
-  .boton-redondo {
-    @apply inline-flex size-9 items-center justify-center rounded-full border border-linea text-tenue transition hover:border-tinta/30 hover:text-tinta;
+  /* ---------- Íconos y botones ---------- */
+
+  .icono {
+    @apply inline-block shrink-0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .boton-principal {
+    @apply items-center gap-2 rounded-lg bg-tinta px-3.5 py-1.5 text-sm font-medium text-fondo transition hover:bg-tinta/85 disabled:cursor-default disabled:bg-linea disabled:text-tenue;
+  }
+  .boton-secundario {
+    @apply inline-flex items-center gap-2 rounded-lg border border-linea bg-superficie px-3 py-1.5 text-sm font-medium transition hover:border-tinta/30;
+  }
+  .boton-peligro {
+    @apply inline-flex items-center gap-2 rounded-lg bg-acento px-3 py-1.5 text-sm font-medium text-superficie transition hover:bg-acento/90;
+  }
+  .boton-texto {
+    @apply rounded-md px-1.5 py-1 text-sm text-tenue transition hover:text-tinta;
+  }
+  .boton-icono {
+    @apply inline-flex size-8 items-center justify-center rounded-lg text-tenue transition hover:bg-linea/60 hover:text-tinta;
+  }
+
+  .pestana {
+    @apply flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 whitespace-nowrap transition hover:bg-linea/60 hover:text-tinta;
+  }
+  .pestana[aria-current="page"] {
+    @apply bg-linea/70 font-medium text-tinta;
+  }
+  .contador {
+    @apply min-w-5 rounded-full bg-tinta px-1.5 text-center text-[0.6875rem] leading-[1.125rem] font-medium tabular-nums text-fondo;
+  }
+
+  /* Control segmentado: lista / tablero, estado y prioridad */
+  .segmentado {
+    @apply inline-flex rounded-lg bg-linea/55 p-0.5 text-sm;
+  }
+  .segmentado > button,
+  .segmentado > label {
+    @apply flex cursor-pointer items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-tenue transition select-none hover:text-tinta;
+  }
+  .segmentado > button[aria-pressed="true"],
+  .segmentado > label:has(:checked) {
+    @apply bg-superficie text-tinta shadow-[0_1px_2px_rgb(25_23_20/0.12)];
+  }
+  .segmentado > label:has(:focus-visible) {
+    @apply outline-2 outline-offset-1 outline-acento;
+  }
+  .segmentado-ancho {
+    @apply flex w-full;
+  }
+  .segmentado-ancho > label {
+    @apply flex-1 py-1.5;
   }
 
   .campo {
-    @apply w-full rounded-xl border border-linea bg-superficie px-3 py-2 text-sm text-tinta transition outline-none focus:border-tinta/40;
+    @apply w-full rounded-lg border border-linea bg-superficie px-3 py-2 text-sm text-tinta transition outline-none focus:border-tinta/40 focus:ring-3 focus:ring-linea/70;
   }
 
-  .selector {
-    @apply rounded-full border border-linea bg-superficie py-1 pr-7 pl-3 text-xs text-tenue transition hover:border-tinta/30 focus:border-tinta/40;
+  /* ---------- Alta rápida ---------- */
+
+  .alta {
+    @apply rounded-xl border border-linea bg-superficie shadow-[0_1px_2px_rgb(25_23_20/0.04)] transition focus-within:border-tinta/25 focus-within:shadow-[0_6px_20px_-12px_rgb(25_23_20/0.25)];
+  }
+  .chip {
+    @apply relative inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-linea py-1 pr-2 pl-2 text-xs text-tenue transition hover:border-tinta/25 hover:text-tinta;
+  }
+  .chip select {
+    @apply cursor-pointer appearance-none bg-transparent pr-0.5 outline-none;
+    field-sizing: content;
+  }
+  .chip:has(select:focus-visible) {
+    @apply outline-2 outline-offset-1 outline-acento;
+  }
+  /* El atajo escrito cambió este valor */
+  .chip.detectado {
+    @apply border-acento/50 bg-acento/5 text-acento;
+  }
+  .chip-prioridad .punto {
+    @apply bg-tinta/35;
+  }
+  .chip-prioridad[data-prioridad="ALTA"] .punto {
+    @apply bg-acento;
+  }
+  .chip-prioridad[data-prioridad="BAJA"] .punto {
+    @apply border border-tinta/40 bg-transparent;
   }
 
-  /* Prioridad: un punto discreto (§4.5). Alta en terracota, media en tinta suave, baja solo el contorno. */
+  /* ---------- Prioridad (§4.5): un punto discreto ---------- */
+
   .punto {
     @apply inline-block size-2 shrink-0 rounded-full;
   }
@@ -82,23 +173,87 @@
     @apply bg-tinta/35;
   }
   .punto-BAJA {
-    @apply border border-tinta/30;
+    @apply border border-tinta/40;
   }
 
-  .tarjeta {
-    @apply block w-full cursor-grab rounded-xl border border-linea bg-superficie p-4 text-left transition hover:border-tinta/30 hover:shadow-[0_10px_24px_-18px_rgb(25_23_20/0.4)] active:cursor-grabbing;
+  /* ---------- Lista ---------- */
+
+  .fila {
+    @apply transition-colors hover:bg-fondo/60;
   }
-  .tarjeta-ALTA {
-    @apply border-l-2 border-l-acento;
+  .titulo-tarea.finalizada {
+    @apply text-tenue line-through decoration-tenue/40;
+  }
+  .casilla {
+    @apply inline-flex size-[1.15rem] shrink-0 items-center justify-center rounded-full border-[1.5px] border-tinta/30 text-transparent transition hover:border-tinta/60 hover:text-tinta/40;
+  }
+  .casilla[data-prioridad="ALTA"] {
+    @apply border-acento/70 hover:border-acento hover:text-acento/60;
+  }
+  .casilla[aria-checked="true"] {
+    @apply border-tinta/60 bg-tinta/60 text-superficie hover:text-superficie;
+  }
+  .casilla .icono {
+    stroke-width: 3;
+  }
+  .etiqueta-estado {
+    @apply rounded bg-linea/80 px-1.5 py-px font-medium text-tinta;
+  }
+
+  /* ---------- Tablero ---------- */
+
+  .columna {
+    @apply flex min-h-32 flex-col gap-2 rounded-xl border border-dashed border-transparent p-0.5 transition;
+  }
+  .columna.destino {
+    @apply border-acento/50 bg-acento/5;
+  }
+  .columna-vacia {
+    @apply rounded-lg border border-dashed border-tinta/15 py-6 text-center text-xs text-tenue;
+  }
+  .tarjeta {
+    @apply block w-full cursor-grab rounded-lg border border-linea bg-superficie px-3.5 py-3 text-left text-sm shadow-[0_1px_2px_rgb(25_23_20/0.05)] transition hover:border-tinta/25 active:cursor-grabbing;
+  }
+  .tarjeta[data-prioridad="ALTA"] {
+    @apply shadow-[inset_2px_0_0_var(--color-acento),0_1px_2px_rgb(25_23_20/0.05)];
   }
   .tarjeta.arrastrando {
     @apply opacity-40;
   }
 
-  .columna {
-    @apply flex min-h-40 flex-col gap-3 rounded-2xl border border-dashed border-transparent p-2 transition;
+  /* ---------- Carga ---------- */
+
+  .esqueleto {
+    @apply block animate-pulse rounded bg-linea/80;
   }
-  .columna.destino {
-    @apply border-acento/60 bg-acento/5;
+
+  /* ---------- Panel lateral ---------- */
+
+  .panel {
+    @apply fixed inset-y-0 right-0 z-40 flex w-full max-w-[28rem] translate-x-6 flex-col border-l border-linea bg-fondo opacity-0 shadow-[-24px_0_48px_-24px_rgb(25_23_20/0.25)] transition duration-200 ease-out;
+  }
+  .panel.abierto {
+    @apply translate-x-0 opacity-100;
+  }
+
+  /* ---------- Diálogo y avisos ---------- */
+
+  .dialogo {
+    @apply m-auto w-[min(40rem,calc(100vw-2rem))] rounded-2xl border border-linea bg-fondo p-0 text-tinta shadow-2xl backdrop:bg-tinta/30;
+  }
+  .atajos {
+    @apply grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2.5 text-sm;
+  }
+  .atajos dt {
+    @apply flex items-center gap-1 text-xs text-tenue;
+  }
+  .atajos dd {
+    @apply text-tinta;
+  }
+  .aviso {
+    @apply fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg bg-tinta px-4 py-2.5 text-sm text-fondo shadow-lg;
+  }
+  .aviso[data-tipo="error"] .icono {
+    @apply text-[#e8a184];
   }
 }

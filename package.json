@@ -3,10 +3,12 @@
   "private": true,
   "scripts": {
     "build:css": "tailwindcss -i src/main/frontend/main.css -o src/main/resources/static/css/main.css --minify",
-    "watch:css": "tailwindcss -i src/main/frontend/main.css -o src/main/resources/static/css/main.css --watch"
+    "watch:css": "tailwindcss -i src/main/frontend/main.css -o src/main/resources/static/css/main.css --watch",
+    "test:js": "node --test \"src/test/js/*.test.js\""
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.1.11",
     "tailwindcss": "4.1.11"
-  }
+  },
+  "type": "module"
 }

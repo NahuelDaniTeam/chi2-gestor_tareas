@@ -52,7 +52,10 @@ Que el uso diario sea simple: abrir la aplicación, ver qué hay para hoy, carga
   - Ejemplo: `Entregar capítulo 2 !a @s` guarda "Entregar capítulo 2", prioridad alta, en esta semana.
   - También se pueden elegir con los dos selectores debajo del campo.
 - Después de guardar, el campo queda vacío y enfocado.
+- El botón "Agregar" y los selectores muestran con qué valores se va a guardar; cuando un atajo cambia uno, se marca en terracota.
 - Fuera del campo, `n` o `/` vuelven a enfocarlo.
+
+**Atajos globales** (fuera de un campo de texto; `?` muestra la lista completa): `1` a `4` cambian de vista, `←` y `→` van al período anterior o siguiente, `t` alterna lista y tablero, `Esc` cierra el panel.
 
 ### 4.3 Vistas de planificación
 
@@ -64,6 +67,10 @@ Cada vista muestra tareas de su horizonte, ordenadas por prioridad, luego por fe
 - **Largo plazo:** todas las tareas de largo plazo, agrupadas por prioridad en la lista.
 
 Cada vista se puede ver como **lista** (con casilla para finalizar) o como **tablero**. El modo elegido se recuerda en ese navegador.
+
+En la lista, las finalizadas se agrupan al final en un bloque plegable ("Finalizadas"). La fecha de cada tarea se muestra solo cuando agrega información: una tarea de hoy en Hoy no dice "Hoy". La prioridad media, que es la de por defecto, no se rotula.
+
+La pestaña Hoy y el título de la ventana muestran cuántas tareas quedan pendientes hoy (con las vencidas).
 
 ### 4.4 Tablero
 
@@ -130,7 +137,9 @@ Los cambios de esquema se hacen con migraciones Flyway, nunca a mano.
 
 - El mismo stack que el web principal de CHI2: Java 21, Spring Boot, Thymeleaf, Tailwind CSS, PostgreSQL con Flyway, JUnit 5 y Testcontainers, Maven (detalle en `CLAUDE.md`).
 - El backend se expone como **API REST** desde el inicio. La interfaz web consume esa misma API: Thymeleaf arma el marco de cada vista y el navegador trae las tareas de `/api/tareas`.
-- Arrastre de tarjetas: arrastrar y soltar nativo de HTML5 con JavaScript propio (`static/js/tareas.js`), sin librerías (propuesta, `PENDIENTES.md` 1).
+- Arrastre de tarjetas: arrastrar y soltar nativo de HTML5 con JavaScript propio, sin librerías (propuesta, `PENDIENTES.md` 1).
+- El JavaScript está en módulos ES en `static/js/` (sin build): la lógica sin DOM (`atajos.js`, `formato.js`) tiene tests con el runner de Node (`src/test/js`), que corren en `./mvnw verify`.
+- Las páginas de error (404 y 500) tienen el diseño de la app (`templates/error.html`).
 - Corre en el puerto **8082**, para poder tenerla abierta junto con el web principal (8080) y peluquería (8081).
 
 Endpoints del MVP:
@@ -155,6 +164,7 @@ Etapa 2 suma los endpoints de grupos y miembros y el parámetro `ambito` en los 
 Implementadas (`./mvnw verify`):
 
 - Unitarias: cálculo de fecha de referencia y fin de período por horizonte (`HorizonteTest`), transiciones de estado, `completada_en` y vencimiento (`TareaTest`), orden por prioridad (`OrdenTareasTest`), "hoy" en hora argentina y títulos de período (`CalendarioTest`).
+- Navegador (`src/test/js`, `node --test`): atajos del alta rápida, fechas que se muestran, resumen de la vista y separación de finalizadas.
 - Controladores con el service simulado: API (`TareaApiControllerTest`) y páginas (`TareaPaginaControllerTest`).
 - Integración de la API con PostgreSQL real (`TareaIntegracionTest`, Testcontainers): alta rápida, vista Hoy con vencidas, semana, mes, largo plazo, arrastre a finalizada, edición, eliminación y que no se vean tareas de otro usuario.
 
@@ -185,3 +195,5 @@ Los pendientes se registran solo en `PENDIENTES.md`. Los que salen de este docum
 - **Lista y tablero en todas las vistas.** La especificación pedía ambas cosas; se resolvió con un selector Lista / Tablero.
 - **Fecha opcional en la API:** si no viene (salvo largo plazo), se usa hoy. Simplifica el alta desde una app nativa.
 - **Sin login en la etapa 1:** todas las tareas son de un usuario fijo (`chi2.tareas.usuario-local`), detrás de la interfaz `UsuarioActual` que la etapa 2 reemplaza por el usuario logueado.
+- **Finalizadas al final de la lista.** La especificación ordena por prioridad; las finalizadas mezcladas con las pendientes hacían ruido, así que en la lista van en un bloque plegable al final (en el tablero ya tienen su columna).
+- **Atajos globales y ayuda (`?`)**, que la especificación no pedía, para usar la app sin mouse.

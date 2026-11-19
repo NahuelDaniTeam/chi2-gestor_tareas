@@ -4,140 +4,217 @@
 <body class="bg-fondo font-sans text-tinta antialiased">
 <header th:replace="~{fragments/layout :: encabezado}"></header>
 
-<main id="app" class="contenedor pb-24"
+<main id="app" class="contenedor pb-28"
       th:data-url-lista="${urlLista}"
       th:data-vista="${vista.name()}"
       th:data-horizonte="${vista.horizonte.name()}"
-      th:data-fecha-alta="${fechaAlta}"
+      th:data-fecha-vista="${periodo.fecha()}"
       th:data-hoy="${hoy}">
 
-	<!-- Cabecera: vista, período y navegación -->
-	<section class="flex flex-wrap items-end justify-between gap-6 pt-12 pb-8 sm:pt-16">
+	<!-- Vista y período -->
+	<section class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pt-10 pb-7 sm:pt-14">
 		<div>
 			<p class="etiqueta" th:text="${vista.etiqueta}">Hoy</p>
-			<h1 class="titulo-display mt-5 text-5xl sm:text-6xl" th:text="${periodo.titulo}">Jueves 19 de noviembre</h1>
+			<h1 class="titulo-display mt-4 text-[2.75rem] sm:text-6xl" th:text="${periodo.titulo()}">Jueves 19 de noviembre</h1>
 		</div>
-		<div class="flex items-center gap-2" th:if="${urlAnterior}">
-			<a th:href="@{${urlActual}}" th:if="${urlActual}" class="mr-2 text-sm text-tenue underline decoration-linea decoration-2 underline-offset-6 hover:text-tinta hover:decoration-acento"
-			   th:text="${vista.horizonte.name() == 'SEMANA'} ? 'Esta semana' : 'Este mes'">Esta semana</a>
-			<a th:href="@{${urlAnterior}}" class="boton-redondo" aria-label="Período anterior" title="Anterior">←</a>
-			<a th:href="@{${urlSiguiente}}" class="boton-redondo" aria-label="Período siguiente" title="Siguiente">→</a>
-		</div>
+		<nav class="flex items-center gap-1.5" th:if="${urlAnterior}" aria-label="Período">
+			<a th:href="@{${urlActual}}" th:if="${urlActual}" class="boton-texto mr-1"
+			   th:text="${vista.name() == 'SEMANA'} ? 'Esta semana' : 'Este mes'">Esta semana</a>
+			<a th:href="@{${urlAnterior}}" class="boton-icono" data-periodo="anterior"
+			   th:aria-label="${vista.name() == 'SEMANA'} ? 'Semana anterior' : 'Mes anterior'" title="Anterior (←)">
+				<svg th:replace="~{fragments/layout :: icono('anterior', 'size-4')}"></svg>
+			</a>
+			<a th:href="@{${urlSiguiente}}" class="boton-icono" data-periodo="siguiente"
+			   th:aria-label="${vista.name() == 'SEMANA'} ? 'Semana siguiente' : 'Mes siguiente'" title="Siguiente (→)">
+				<svg th:replace="~{fragments/layout :: icono('siguiente', 'size-4')}"></svg>
+			</a>
+		</nav>
 	</section>
 
-	<!-- Alta rápida (§4.2): foco al abrir, Enter guarda, el campo queda vacío y enfocado -->
-	<form id="alta" class="rounded-2xl border border-linea bg-superficie p-3 transition focus-within:border-tinta/30 sm:p-4" autocomplete="off">
-		<label for="alta-titulo" class="sr-only">Nueva tarea</label>
-		<input id="alta-titulo" name="titulo" maxlength="200" autofocus
-		       class="w-full bg-transparent px-2 py-2 text-lg outline-none placeholder:text-tenue/70"
-		       placeholder="Nueva tarea y Enter">
-		<div class="mt-2 flex flex-wrap items-center gap-2 px-1">
-			<label class="sr-only" for="alta-horizonte">Horizonte</label>
-			<select id="alta-horizonte" class="selector">
-				<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}"
-				        th:selected="${h == vista.horizonte}">Día</option>
-			</select>
-			<label class="sr-only" for="alta-prioridad">Prioridad</label>
-			<select id="alta-prioridad" class="selector">
-				<option th:each="p : ${prioridades}" th:value="${p.name()}" th:text="'Prioridad ' + ${#strings.toLowerCase(p.etiqueta)}"
-				        th:selected="${p.name() == 'MEDIA'}">Prioridad media</option>
-			</select>
-			<span id="alta-vista-previa" class="text-xs text-tenue" aria-live="polite"></span>
-			<span class="ml-auto hidden text-xs text-tenue/80 sm:inline">
-				Atajos: <kbd>!a</kbd> <kbd>!m</kbd> <kbd>!b</kbd> prioridad · <kbd>@d</kbd> <kbd>@s</kbd> <kbd>@m</kbd> <kbd>@l</kbd> horizonte
-			</span>
+	<!-- Alta rápida (§4.2) -->
+	<form id="alta" class="alta" autocomplete="off">
+		<div class="flex items-center gap-3 px-4 pt-3 sm:px-5">
+			<svg th:replace="~{fragments/layout :: icono('mas', 'size-5 shrink-0 text-tenue')}"></svg>
+			<label for="alta-titulo" class="sr-only">Nueva tarea</label>
+			<input id="alta-titulo" name="titulo" maxlength="200" autofocus enterkeyhint="done"
+			       class="min-w-0 flex-1 bg-transparent py-2 text-[1.0625rem] outline-none placeholder:text-tenue/70"
+			       placeholder="Agregar una tarea">
+			<button id="alta-guardar" type="submit" class="boton-principal hidden sm:inline-flex" disabled>Agregar</button>
+		</div>
+		<div class="flex flex-wrap items-center gap-2 px-3 pt-2 pb-3 sm:px-4">
+			<label class="chip" title="Horizonte (@d, @s, @m, @l)">
+				<svg th:replace="~{fragments/layout :: icono('calendario', 'size-3.5')}"></svg>
+				<span class="sr-only">Horizonte</span>
+				<select id="alta-horizonte">
+					<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}"
+					        th:selected="${h == vista.horizonte}">Día</option>
+				</select>
+			</label>
+			<label class="chip chip-prioridad" title="Prioridad (!a, !m, !b)" data-prioridad="MEDIA">
+				<span class="punto"></span>
+				<span class="sr-only">Prioridad</span>
+				<select id="alta-prioridad">
+					<option th:each="p : ${prioridades}" th:value="${p.name()}" th:text="'Prioridad ' + ${#strings.toLowerCase(p.etiqueta)}"
+					        th:selected="${p.name() == 'MEDIA'}">Prioridad media</option>
+				</select>
+			</label>
+			<button type="button" class="boton-texto ml-auto inline-flex items-center gap-1.5 text-xs" data-abrir-ayuda>
+				<svg th:replace="~{fragments/layout :: icono('teclado', 'size-4')}"></svg>
+				Atajos
+			</button>
 		</div>
 	</form>
 
-	<!-- Modo de visualización -->
-	<div class="mt-10 flex items-center justify-between gap-4">
-		<p id="resumen" class="text-sm text-tenue" aria-live="polite"></p>
-		<div class="flex rounded-full border border-linea bg-superficie p-1 text-sm" role="group" aria-label="Modo">
-			<button type="button" class="pestana" data-modo="lista">Lista</button>
-			<button type="button" class="pestana" data-modo="tablero">Tablero</button>
+	<!-- Barra de la vista -->
+	<div class="mt-9 flex items-center justify-between gap-4">
+		<p id="resumen" class="text-sm text-tenue tabular-nums" aria-live="polite"></p>
+		<div class="segmentado" role="group" aria-label="Mostrar como">
+			<button type="button" data-modo="lista" aria-pressed="true" title="Lista (t)">
+				<svg th:replace="~{fragments/layout :: icono('lista', 'size-4')}"></svg>Lista
+			</button>
+			<button type="button" data-modo="tablero" aria-pressed="false" title="Tablero (t)">
+				<svg th:replace="~{fragments/layout :: icono('tablero', 'size-4')}"></svg>Tablero
+			</button>
 		</div>
 	</div>
 
-	<!-- Lista ordenada por prioridad -->
-	<section id="lista" class="mt-6" aria-label="Lista de tareas" hidden></section>
+	<!-- Mientras llega la primera respuesta -->
+	<div id="cargando" class="mt-5 divide-y divide-linea rounded-xl border border-linea bg-superficie" aria-hidden="true">
+		<div class="flex items-center gap-3.5 px-5 py-4"><span class="esqueleto size-[1.15rem] rounded-full"></span><span class="esqueleto h-3 w-2/5"></span></div>
+		<div class="flex items-center gap-3.5 px-5 py-4"><span class="esqueleto size-[1.15rem] rounded-full"></span><span class="esqueleto h-3 w-3/5"></span></div>
+		<div class="flex items-center gap-3.5 px-5 py-4"><span class="esqueleto size-[1.15rem] rounded-full"></span><span class="esqueleto h-3 w-1/3"></span></div>
+	</div>
 
-	<!-- Tablero por estado (§4.4): las tarjetas se arrastran entre columnas -->
-	<section id="tablero" class="mt-6 grid gap-6 md:grid-cols-3" aria-label="Tablero" hidden>
-		<div th:each="e : ${estados}">
-			<h2 class="flex items-center justify-between border-b border-linea pb-3 text-xs font-medium tracking-[0.2em] text-tenue uppercase">
+	<div id="problema" class="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-acento/30 bg-acento/5 px-5 py-4" role="alert" hidden>
+		<p class="flex items-center gap-2 text-sm">
+			<svg th:replace="~{fragments/layout :: icono('alerta', 'size-4 text-acento')}"></svg>
+			No pudimos traer las tareas. Revisá que la aplicación siga corriendo.
+		</p>
+		<button id="reintentar" type="button" class="boton-secundario">
+			<svg th:replace="~{fragments/layout :: icono('recargar', 'size-4')}"></svg>Reintentar
+		</button>
+	</div>
+
+	<section id="lista" class="mt-5" aria-label="Tareas" hidden></section>
+
+	<!-- Tablero por estado (§4.4) -->
+	<section id="tablero" class="mt-5 grid gap-5 md:grid-cols-3" aria-label="Tablero" hidden>
+		<div th:each="e : ${estados}" class="rounded-2xl bg-linea/35 p-2">
+			<h2 class="flex items-center justify-between px-2 pt-1.5 pb-2.5 text-sm font-medium">
 				<span th:text="${e.etiqueta}">Pendiente</span>
-				<span class="font-sans tracking-normal" th:data-contador="${e.name()}">0</span>
+				<span class="text-xs tabular-nums text-tenue" th:data-contador="${e.name()}">0</span>
 			</h2>
-			<div class="columna mt-3" th:data-estado="${e.name()}"></div>
+			<div class="columna" th:data-estado="${e.name()}" th:aria-label="${e.etiqueta}"></div>
 		</div>
 	</section>
 
-	<p id="vacio" class="mt-6 rounded-2xl border border-dashed border-linea px-6 py-14 text-center text-tenue" hidden>
-		Nada por acá. Escribí una tarea arriba y apretá Enter.
-	</p>
+	<div id="vacio" class="mt-5 rounded-xl border border-dashed border-linea px-6 py-16 text-center" hidden>
+		<p class="font-display text-3xl" th:text="${vista.name() == 'HOY'} ? 'Día despejado' : 'Nada planificado'">Día despejado</p>
+		<p class="mt-2 text-tenue">Escribí una tarea arriba y apretá Enter.</p>
+	</div>
 </main>
 
-<!-- Panel lateral de edición: todo se guarda al instante, sin botón de guardar (§3) -->
-<div id="panel-fondo" class="fixed inset-0 z-30 bg-tinta/20" hidden></div>
-<aside id="panel" class="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col overflow-y-auto border-l border-linea bg-fondo p-6 shadow-2xl sm:p-8"
-       aria-labelledby="panel-titulo-label" role="dialog" aria-modal="true" hidden>
-	<div class="flex items-center justify-between">
-		<p class="etiqueta" id="panel-titulo-label">Tarea</p>
-		<div class="flex items-center gap-3">
-			<span id="panel-guardado" class="text-xs text-tenue" aria-live="polite"></span>
-			<button type="button" class="boton-redondo" data-cerrar aria-label="Cerrar">✕</button>
-		</div>
+<!-- Panel lateral de edición: todo se guarda al instante (§3) -->
+<div id="panel-fondo" class="fixed inset-0 z-30 bg-tinta/25" hidden></div>
+<aside id="panel" class="panel" role="dialog" aria-modal="true" aria-label="Editar tarea" hidden>
+	<div class="flex items-center justify-between gap-3 border-b border-linea px-6 py-3.5">
+		<span id="panel-guardado" class="inline-flex items-center gap-1.5 text-xs text-tenue" aria-live="polite"></span>
+		<button type="button" class="boton-icono" data-cerrar aria-label="Cerrar (Esc)" title="Cerrar (Esc)">
+			<svg th:replace="~{fragments/layout :: icono('cerrar', 'size-4')}"></svg>
+		</button>
 	</div>
-	<form id="panel-form" class="mt-6 flex flex-col gap-5" autocomplete="off">
+	<form id="panel-form" class="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-6" autocomplete="off">
 		<div>
 			<label for="p-titulo" class="sr-only">Título</label>
-			<textarea id="p-titulo" name="titulo" rows="2" maxlength="200" required
-			          class="w-full resize-none bg-transparent font-display text-3xl leading-tight outline-none"></textarea>
+			<textarea id="p-titulo" name="titulo" rows="1" maxlength="200" required
+			          class="w-full resize-none overflow-hidden bg-transparent font-display text-[2rem] leading-tight outline-none"></textarea>
+			<p id="p-error" class="mt-2 text-sm text-acento" role="alert" hidden></p>
 		</div>
-		<div>
-			<label for="p-descripcion" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Descripción</label>
-			<textarea id="p-descripcion" name="descripcion" rows="4" maxlength="2000" class="campo mt-2" placeholder="Opcional"></textarea>
-		</div>
+
+		<fieldset>
+			<legend class="rotulo">Estado</legend>
+			<div class="segmentado segmentado-ancho">
+				<label th:each="e : ${estados}"><input type="radio" name="estado" th:value="${e.name()}" class="sr-only"><span th:text="${e.etiqueta}">Pendiente</span></label>
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend class="rotulo">Prioridad</legend>
+			<div class="segmentado segmentado-ancho">
+				<label th:each="p : ${prioridades}"><input type="radio" name="prioridad" th:value="${p.name()}" class="sr-only"><span class="inline-flex items-center gap-2"><span th:class="'punto punto-' + ${p.name()}"></span><span th:text="${p.etiqueta}">Media</span></span></label>
+			</div>
+		</fieldset>
+
 		<div class="grid grid-cols-2 gap-4">
 			<div>
-				<label for="p-estado" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Estado</label>
-				<select id="p-estado" name="estado" class="campo mt-2">
-					<option th:each="e : ${estados}" th:value="${e.name()}" th:text="${e.etiqueta}">Pendiente</option>
-				</select>
-			</div>
-			<div>
-				<label for="p-prioridad" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Prioridad</label>
-				<select id="p-prioridad" name="prioridad" class="campo mt-2">
-					<option th:each="p : ${prioridades}" th:value="${p.name()}" th:text="${p.etiqueta}">Media</option>
-				</select>
-			</div>
-			<div>
-				<label for="p-horizonte" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Horizonte</label>
-				<select id="p-horizonte" name="horizonte" class="campo mt-2">
+				<label for="p-horizonte" class="rotulo">Horizonte</label>
+				<select id="p-horizonte" name="horizonte" class="campo">
 					<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}">Día</option>
 				</select>
 			</div>
 			<div>
-				<label for="p-fecha" id="p-fecha-label" class="text-xs font-medium tracking-[0.15em] text-tenue uppercase">Fecha</label>
-				<input id="p-fecha" name="fechaReferencia" type="date" class="campo mt-2">
+				<label for="p-fecha" id="p-fecha-label" class="rotulo">Fecha</label>
+				<input id="p-fecha" name="fechaReferencia" type="date" class="campo">
 			</div>
+			<p id="p-fecha-ayuda" class="col-span-2 -mt-2 text-xs text-tenue empty:hidden"></p>
 		</div>
-		<p id="p-error" class="text-sm text-acento" role="alert" hidden></p>
-		<p id="p-meta" class="text-xs leading-relaxed text-tenue"></p>
+
+		<div>
+			<label for="p-descripcion" class="rotulo">Descripción</label>
+			<textarea id="p-descripcion" name="descripcion" rows="5" maxlength="2000" class="campo resize-y" placeholder="Notas, links, próximos pasos…"></textarea>
+		</div>
+
+		<p id="p-meta" class="mt-auto text-xs text-tenue"></p>
 	</form>
-	<div class="mt-auto border-t border-linea pt-6">
-		<button type="button" id="p-eliminar" class="text-sm text-tenue underline decoration-linea underline-offset-4 hover:text-acento hover:decoration-acento">Eliminar tarea</button>
-		<div id="p-confirmar" class="flex flex-wrap items-center gap-3" hidden>
+	<div class="border-t border-linea px-6 py-4">
+		<button type="button" id="p-eliminar" class="boton-texto inline-flex items-center gap-2 hover:text-acento">
+			<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Eliminar tarea
+		</button>
+		<div id="p-confirmar" class="flex flex-wrap items-center justify-between gap-3" hidden>
 			<span class="text-sm">¿Eliminar esta tarea? No se puede deshacer.</span>
-			<button type="button" id="p-confirmar-si" class="rounded-full bg-acento px-4 py-1.5 text-sm font-medium text-superficie">Sí, eliminar</button>
-			<button type="button" id="p-confirmar-no" class="text-sm text-tenue hover:text-tinta">Cancelar</button>
+			<span class="flex items-center gap-2">
+				<button type="button" id="p-confirmar-no" class="boton-secundario">Cancelar</button>
+				<button type="button" id="p-confirmar-si" class="boton-peligro">Eliminar</button>
+			</span>
 		</div>
 	</div>
 </aside>
 
-<!-- Avisos breves -->
-<div id="aviso" class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-tinta px-5 py-2.5 text-sm text-fondo shadow-lg" role="status" hidden></div>
+<!-- Atajos de teclado -->
+<dialog id="ayuda" class="dialogo" aria-labelledby="ayuda-titulo">
+	<div class="flex items-center justify-between border-b border-linea px-6 py-4">
+		<h2 id="ayuda-titulo" class="font-display text-2xl">Atajos de teclado</h2>
+		<form method="dialog"><button class="boton-icono" aria-label="Cerrar">
+			<svg th:replace="~{fragments/layout :: icono('cerrar', 'size-4')}"></svg>
+		</button></form>
+	</div>
+	<div class="grid gap-8 px-6 py-5 sm:grid-cols-2">
+		<section>
+			<h3 class="rotulo">Al escribir una tarea</h3>
+			<dl class="atajos">
+				<dt><kbd>!a</kbd> <kbd>!m</kbd> <kbd>!b</kbd></dt><dd>Prioridad alta, media o baja</dd>
+				<dt><kbd>@d</kbd> <kbd>@s</kbd></dt><dd>Para hoy o esta semana</dd>
+				<dt><kbd>@m</kbd> <kbd>@l</kbd></dt><dd>Este mes o largo plazo</dd>
+				<dt><kbd>Enter</kbd></dt><dd>Guardar</dd>
+			</dl>
+			<p class="mt-3 text-xs text-tenue">Ejemplo: <span class="text-tinta">Entregar capítulo 2 !a @s</span></p>
+		</section>
+		<section>
+			<h3 class="rotulo">En cualquier parte</h3>
+			<dl class="atajos">
+				<dt><kbd>N</kbd> o <kbd>/</kbd></dt><dd>Nueva tarea</dd>
+				<dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>Hoy, Semana, Mes, Largo plazo</dd>
+				<dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Período anterior o siguiente</dd>
+				<dt><kbd>T</kbd></dt><dd>Lista o tablero</dd>
+				<dt><kbd>Esc</kbd></dt><dd>Cerrar el panel</dd>
+				<dt><kbd>?</kbd></dt><dd>Esta ayuda</dd>
+			</dl>
+		</section>
+	</div>
+</dialog>
 
-<script th:src="@{/js/tareas.js}" defer></script>
+<div id="aviso" class="aviso" role="status" hidden></div>
+
+<script type="module" th:src="@{/js/app.js}"></script>
 </body>
 </html>

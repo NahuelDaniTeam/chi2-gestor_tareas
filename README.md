@@ -22,7 +22,8 @@ Requisitos: Java 21 y Docker Desktop abierto.
 ## Uso rápido
 
 - Escribí la tarea y Enter. Atajos dentro del texto: `!a` `!m` `!b` (prioridad) y `@d` `@s` `@m` `@l` (día, semana, mes, largo plazo). Ej.: `Entregar capítulo 2 !a @s`.
-- `n` o `/` vuelven al campo de alta. Clic en una tarea abre el panel de edición; Escape lo cierra.
+- `n` o `/` vuelven al campo de alta, `1`–`4` cambian de vista, `←` `→` cambian de semana o mes, `t` alterna lista y tablero. `?` muestra todos los atajos.
+- Clic en una tarea abre el panel de edición; Escape lo cierra.
 - Lista o tablero: selector arriba a la derecha. En el tablero, arrastrá las tarjetas entre columnas.
 
 ## Documentación

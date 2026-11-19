@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+	<!-- Íconos de trazo, 24x24, heredan el color del texto. Se usan con <svg><use href="/img/iconos.svg#nombre"/></svg>. -->
+	<defs>
+		<style>symbol { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }</style>
+	</defs>
+	<symbol id="mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+	<symbol id="check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+	<symbol id="cerrar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+	<symbol id="anterior" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+	<symbol id="siguiente" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+	<symbol id="abajo" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+	<symbol id="calendario" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM3 10h18M8 3v4M16 3v4"/></symbol>
+	<symbol id="bandera" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+	<symbol id="alerta" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 8v5M12 16.5v.01"/></symbol>
+	<symbol id="lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+	<symbol id="tablero" viewBox="0 0 24 24"><path d="M4 4h4v16H4ZM10 4h4v11h-4ZM16 4h4v7h-4Z"/></symbol>
+	<symbol id="teclado" viewBox="0 0 24 24"><path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1ZM7 10h.01M11 10h.01M15 10h.01M7 14h10"/></symbol>
+	<symbol id="papelera" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+	<symbol id="nota" viewBox="0 0 24 24"><path d="M5 6h14M5 11h14M5 16h9"/></symbol>
+	<symbol id="recargar" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></symbol>
+</svg>

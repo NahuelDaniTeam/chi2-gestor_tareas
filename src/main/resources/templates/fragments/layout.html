@@ -16,6 +16,9 @@
 </head>
 <body>
 
+<!-- Ícono del sprite static/img/iconos.svg -->
+<svg th:fragment="icono(nombre, clase)" th:class="'icono ' + ${clase}" aria-hidden="true"><use th:href="@{/img/iconos.svg} + '#' + ${nombre}"></use></svg>
+
 <!-- Isotipo χ² (logo de CHI2, igual que en el web principal). Toma el color del texto; el "2" va en gris cálido. -->
 <svg th:fragment="isotipo(clase)" th:class="${clase}" viewBox="10 11 44 41" fill="none" stroke-linecap="round" aria-hidden="true">
 	<g transform="translate(-3 0)">
@@ -27,21 +30,25 @@
 </svg>
 
 <!-- Logo del módulo: χ² | CHI2 · Tareas -->
-<a th:fragment="logo" th:href="@{/}" class="flex items-center gap-3 text-tinta" aria-label="Tareas CHI2, hoy">
+<a th:fragment="logo" th:href="@{/}" class="flex shrink-0 items-center gap-3 text-tinta" aria-label="Tareas CHI2, ir a Hoy">
 	<svg th:replace="~{fragments/layout :: isotipo('h-7 w-auto')}"></svg>
 	<span class="h-6 w-px bg-linea" aria-hidden="true"></span>
 	<span class="font-display text-[1.6rem] leading-none tracking-wide">CHI<em class="text-[#a8a29e]">2</em></span>
-	<span class="text-xs font-medium tracking-[0.2em] text-tenue uppercase">Tareas</span>
+	<span class="hidden text-sm text-tenue sm:inline">Tareas</span>
 </a>
 
 <!-- Encabezado: marca y vistas de planificación (§4.3) -->
-<header th:fragment="encabezado" class="sticky top-0 z-20 border-b border-linea/80 bg-fondo/85 backdrop-blur">
-	<nav class="contenedor flex flex-wrap items-center justify-between gap-x-8 gap-y-3 py-4" aria-label="Vistas">
+<header th:fragment="encabezado" class="sticky top-0 z-20 border-b border-linea/80 bg-fondo/90 backdrop-blur">
+	<nav class="contenedor flex items-center justify-between gap-6 py-3.5" aria-label="Vistas">
 		<a th:replace="~{fragments/layout :: logo}"></a>
-		<ul class="-mx-1 flex gap-1 overflow-x-auto text-sm text-tenue">
-			<li th:each="v : ${vistas}">
-				<a th:href="@{${v.ruta}}" class="pestana" th:text="${v.etiqueta}"
-				   th:attr="aria-current=${v == vista} ? 'page' : null">Vista</a>
+		<ul class="-mr-1 flex gap-0.5 overflow-x-auto text-sm text-tenue">
+			<li th:each="v, i : ${vistas}">
+				<a th:href="@{${v.ruta}}" class="pestana" th:data-vista="${v.name()}"
+				   th:title="${v.etiqueta} + ' (' + ${i.count} + ')'"
+				   th:attr="aria-current=${v == vista} ? 'page' : null">
+					<span th:text="${v.etiqueta}">Vista</span>
+					<span th:if="${v.name() == 'HOY'}" class="contador" data-contador-hoy hidden></span>
+				</a>
 			</li>
 		</ul>
 	</nav>

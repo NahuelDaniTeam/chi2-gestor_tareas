@@ -36,7 +36,7 @@ class TareaPaginaControllerTest {
 						containsString("Jueves 19 de noviembre"),
 						containsString("id=\"alta-titulo\""),
 						containsString("autofocus"),
-						not(containsString("Período anterior")))));
+						not(containsString("data-periodo=\"anterior\"")))));
 	}
 
 	@Test

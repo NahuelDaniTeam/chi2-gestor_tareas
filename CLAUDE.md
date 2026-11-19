@@ -35,7 +35,7 @@ Módulo de CHI2 para planificar tareas personales por día, semana, mes y largo 
 
 - **Backend:** Java 21 con Spring Boot
 - **Plantillas:** Thymeleaf (solo el marco de cada vista; las tareas las trae el navegador de la API)
-- **Interacción:** JavaScript propio, sin librerías (`static/js/tareas.js`): alta rápida, lista, tablero con arrastre nativo de HTML5 y panel de edición
+- **Interacción:** JavaScript propio en módulos ES, sin librerías ni build (`static/js/`): alta rápida, lista, tablero con arrastre nativo de HTML5 y panel de edición. Tests de la lógica sin DOM con `node --test`
 - **Estilos:** Tailwind CSS
 - **Base de datos:** PostgreSQL, con migraciones Flyway
 - **Pruebas:** JUnit 5 y Testcontainers
@@ -68,15 +68,17 @@ src/main/java/com/chi2/tareas/
 └── api/                       @RestController bajo /api/... y su manejo de errores
 src/main/resources/
 ├── templates/                 vistas Thymeleaf (fragments/layout.html = piezas compartidas)
-├── static/                    favicon, íconos, manifest y js/tareas.js
+├── static/                    favicon, íconos, manifest, img/iconos.svg (sprite) y js/ (módulos)
 └── db/migration/              migraciones Flyway
 src/main/frontend/main.css     entrada de Tailwind (escanea plantillas y JS)
 src/test/java/...              tests, mismo paquete que la clase que prueban
+src/test/js/                   tests de los módulos de static/js sin DOM (node --test)
 ```
 
 - Una funcionalidad nueva va en su propio paquete con sus capas (ver "Arquitectura en capas"); su `@RestController` va en `api/`. La etapa 2 suma el paquete `grupo/`.
-- `templates/fragments/layout.html` tiene las piezas compartidas: `head(titulo)`, `isotipo(clase)`, `logo` y `encabezado`.
-- `tareas.js` arma el HTML con clases de Tailwind escritas completas (Tailwind las encuentra escaneando el archivo). Nada de `innerHTML` con datos del usuario: siempre `textContent`.
+- `templates/fragments/layout.html` tiene las piezas compartidas: `head(titulo)`, `icono(nombre, clase)`, `isotipo(clase)`, `logo` y `encabezado`.
+- `static/js/`: `app.js` es la entrada; `api.js` habla con `/api/tareas`; `render.js`, `alta.js` y `panel.js` manejan cada parte de la pantalla; `atajos.js` y `formato.js` son lógica pura, sin DOM, y son los que se testean. Las clases de Tailwind se escriben completas (Tailwind las encuentra escaneando los archivos). Nada de `innerHTML` con datos del usuario: siempre `textContent` (helper `el()` de `dom.js`).
+- Íconos: sprite `static/img/iconos.svg`, desde Thymeleaf con el fragmento `icono(nombre, clase)` y desde JS con `icono()` de `dom.js`. No usar caracteres sueltos (✕, ←) como íconos.
 - `src/main/frontend/main.css` — entrada de Tailwind v4; los tokens de marca van en el bloque `@theme`. El CSS compilado (`static/css/main.css`) se genera en el build y **no se commitea**.
 - `src/main/resources/db/migration/` — migraciones Flyway `V<n>__descripcion.sql`. **Nunca editar una migración ya mergeada a `main`**; crear una nueva. Si los dos crean la misma versión `V<n>` en ramas distintas, quien mergea segundo renumera la suya.
 - El esquema lo define solo Flyway (`ddl-auto=validate`).

@@ -159,6 +159,17 @@
 							<arguments>run build:css</arguments>
 						</configuration>
 					</execution>
+					<!-- Tests de la lógica del navegador (src/test/js) con el runner de tests de Node; se saltean con skipTests -->
+					<execution>
+						<id>test-js</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>test</phase>
+						<configuration>
+							<arguments>run test:js</arguments>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
