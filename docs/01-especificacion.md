@@ -93,6 +93,15 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 - Dentro de cada vista, las tareas de prioridad alta aparecen primero.
 - Las tareas de prioridad alta se distinguen con un punto y un filete en terracota (el acento de la marca); media, con un punto gris; baja, con un punto solo de contorno.
 
+### 4.6 Proyectos
+
+- Un **proyecto** (o etiqueta) agrupa tareas: "Tesis", "Facultad", "Personal". Tiene nombre (hasta 40 caracteres, único sin distinguir mayúsculas) y uno de siete colores apagados.
+- Cada tarea tiene, como mucho, un proyecto.
+- **Filtro** en todas las vistas, en la barra de la vista ("Todos los proyectos" o uno). Se recuerda en ese navegador. Con un proyecto filtrado, las tareas nuevas se crean en ese proyecto.
+- En el alta, `#tesis` asigna el proyecto (sin importar mayúsculas ni tildes; `#redes_de_datos` encuentra "Redes de Datos"). Si no existe, se crea.
+- El diálogo "Administrar proyectos…" (desde el filtro) permite crear, renombrar, cambiar el color y eliminar. Al eliminar un proyecto, sus tareas quedan sin proyecto.
+- Base de la etapa 2: un grupo va a funcionar como un proyecto compartido.
+
 ## 5. Etapa 2: grupos (después del MVP personal)
 
 - Un usuario puede **crear grupos** (por ejemplo, "Tesis") e invitar a otros usuarios.
@@ -110,7 +119,7 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 
 - Recordatorios y notificaciones.
 - Tareas recurrentes.
-- Subtareas y etiquetas.
+- Subtareas.
 - Adjuntos.
 - Edición en tiempo real entre usuarios (los cambios se ven al recargar; la lista también se recarga al volver a la ventana).
 - App nativa. La API REST ya queda preparada para sumarla más adelante.
@@ -134,6 +143,8 @@ Tabla `tarea` (migraciones `V1__tarea.sql` y `V2__plazos_anidados.sql`):
 | `asignado_a` | UUID, opcional | Etapa 2 |
 | `creada_en`, `actualizada_en` | timestamp | En UTC |
 | `completada_en` | timestamp, opcional | Se completa al pasar a `FINALIZADA` y se borra si vuelve atrás (restricción en la base) |
+
+Tabla `proyecto` (`V3__proyecto.sql`): `id`, `usuario_id`, `nombre`, `color`, `creado_en`. La tarea suma `proyecto_id` (clave foránea; al borrar el proyecto queda en nulo).
 
 Etapa 2 agrega las tablas `grupo` y `miembro_grupo` (grupo, usuario y rol) y las claves foráneas de `grupo_id` y `asignado_a`. El modelo queda preparado desde el MVP con `usuario_id` y `ambito`, para no rehacer la base.
 
@@ -162,6 +173,12 @@ Endpoints del MVP:
 | `PATCH /api/tareas/{id}/estado` | `{ "estado": "FINALIZADA" }` | 200 / 400 / 404 |
 | `PATCH /api/tareas/{id}/prioridad` | `{ "prioridad": "ALTA" }` | 200 / 400 / 404 |
 | `DELETE /api/tareas/{id}` | Elimina. | 204 / 404 |
+| `GET /api/proyectos` | Proyectos del usuario, por nombre. | 200 |
+| `POST /api/proyectos` | `{ "nombre": "Tesis", "color": "PINO" }` (color opcional, rota si falta). | 201 / 400 / 409 |
+| `PUT /api/proyectos/{id}` | Renombrar o cambiar el color. | 200 / 400 / 404 / 409 |
+| `DELETE /api/proyectos/{id}` | Elimina; sus tareas quedan sin proyecto. | 204 / 404 |
+
+Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
 
 Los errores vuelven como `ProblemDetail`; los de validación, con un mapa `errores` por campo. Una tarea de otro usuario responde 404, igual que una inexistente.
 

@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.chi2.tareas.WebMvcTestConfig;
 import com.chi2.tareas.tarea.Ambito;
 import com.chi2.tareas.tarea.EstadoTarea;
+import com.chi2.tareas.tarea.FiltroTareas;
 import com.chi2.tareas.tarea.Horizonte;
 import com.chi2.tareas.tarea.Prioridad;
 import com.chi2.tareas.tarea.Rango;
@@ -55,7 +56,7 @@ class TareaApiControllerTest {
 	@Test
 	void listaPorRango() throws Exception {
 		Rango semana = new Rango(LocalDate.parse("2026-11-16"), LocalDate.parse("2026-11-22"));
-		when(service.listar(semana, Prioridad.ALTA, null)).thenReturn(List.of(respuesta(EstadoTarea.PENDIENTE)));
+		when(service.listar(semana, new FiltroTareas(Prioridad.ALTA, null, null))).thenReturn(List.of(respuesta(EstadoTarea.PENDIENTE)));
 
 		mvc.perform(get("/api/tareas").param("desde", "2026-11-16").param("hasta", "2026-11-22")
 						.param("prioridad", "ALTA"))
@@ -69,7 +70,7 @@ class TareaApiControllerTest {
 	void unRangoSinFinEsLargoPlazo() throws Exception {
 		mvc.perform(get("/api/tareas").param("desde", "2026-12-01")).andExpect(status().isOk());
 
-		verify(service).listar(Rango.desde(LocalDate.parse("2026-12-01")), null, null);
+		verify(service).listar(Rango.desde(LocalDate.parse("2026-12-01")), FiltroTareas.NINGUNO);
 	}
 
 	@Test
@@ -85,7 +86,7 @@ class TareaApiControllerTest {
 
 	@Test
 	void sinPlazoDevuelveLasPorPlanificar() throws Exception {
-		when(service.sinPlazo(null, null)).thenReturn(List.of());
+		when(service.sinPlazo(FiltroTareas.NINGUNO)).thenReturn(List.of());
 
 		mvc.perform(get("/api/tareas/sin-plazo")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
 	}
@@ -104,7 +105,7 @@ class TareaApiControllerTest {
 
 	@Test
 	void hoyDevuelveLasDelDia() throws Exception {
-		when(service.hoy(null, null)).thenReturn(List.of(respuesta(EstadoTarea.PENDIENTE)));
+		when(service.hoy(FiltroTareas.NINGUNO)).thenReturn(List.of(respuesta(EstadoTarea.PENDIENTE)));
 
 		mvc.perform(get("/api/tareas/hoy"))
 				.andExpect(status().isOk())
@@ -225,7 +226,7 @@ class TareaApiControllerTest {
 	static TareaResponse respuesta(EstadoTarea estado) {
 		Instant ahora = WebMvcTestConfig.AHORA;
 		return new TareaResponse(ID, "Leer capítulo 3", null, Horizonte.SEMANA, LocalDate.parse("2026-11-16"),
-				Prioridad.ALTA, estado, Ambito.PERSONAL, false, ahora, ahora,
+				Prioridad.ALTA, estado, Ambito.PERSONAL, null, false, ahora, ahora,
 				estado == EstadoTarea.FINALIZADA ? ahora : null);
 	}
 

@@ -8,6 +8,7 @@ import { iniciarAlta } from "./alta.js";
 import { avisar, guardarPreferencia, leerPreferencia } from "./dom.js";
 import { isoLocal, resumen } from "./formato.js";
 import { iniciarPanel } from "./panel.js";
+import { iniciarProyectos } from "./proyectos.js";
 import { dibujar, habilitarArrastre } from "./render.js";
 
 const raiz = document.getElementById("app");
@@ -16,7 +17,9 @@ const contexto = Object.freeze({
 	fechaVista: raiz.dataset.fechaVista || null,
 	hoy: raiz.dataset.hoy,
 	urlLista: raiz.dataset.urlLista,
-	conCalendario: raiz.dataset.conCalendario === "true"
+	conCalendario: raiz.dataset.conCalendario === "true",
+	proyectoDe: id => proyectos?.porId(id),
+	filtroProyecto: () => proyectos?.filtro
 });
 const TITULO = document.title;
 
@@ -45,9 +48,11 @@ const acciones = {
 	mover
 };
 
+/** Lo que se dibuja: las tareas de la vista, filtradas por el proyecto elegido. */
 function render() {
-	dibujar(estado, contexto, acciones);
-	document.getElementById("resumen").textContent = estado.cargando || estado.error ? "" : resumen(estado.tareas);
+	const visibles = proyectos ? proyectos.filtrar(estado.tareas) : estado.tareas;
+	dibujar({ ...estado, tareas: visibles }, contexto, acciones);
+	document.getElementById("resumen").textContent = estado.cargando || estado.error ? "" : resumen(visibles);
 }
 
 async function cargar() {
@@ -124,10 +129,12 @@ function cambiarModo(modo) {
 	render();
 }
 
+let proyectos = null;
 const panel = iniciarPanel(contexto, cargar);
-const alta = iniciarAlta(contexto, async nueva => {
+proyectos = await iniciarProyectos(() => render());
+const alta = iniciarAlta(contexto, proyectos, async nueva => {
 	await cargar();
-	return estado.tareas.some(t => t.id === nueva.id);
+	return proyectos.filtrar(estado.tareas).some(t => t.id === nueva.id);
 });
 habilitarArrastre(id => estado.tareas.find(t => t.id === id), { cambiarEstado, mover });
 

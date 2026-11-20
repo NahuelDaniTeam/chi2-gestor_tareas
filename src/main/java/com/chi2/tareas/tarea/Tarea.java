@@ -49,6 +49,9 @@ public class Tarea {
 	@Column(name = "usuario_id", nullable = false)
 	private UUID usuarioId;
 
+	@Column(name = "proyecto_id")
+	private UUID proyectoId;
+
 	/** Etapa 2. */
 	@Column(name = "grupo_id")
 	private UUID grupoId;
@@ -114,6 +117,12 @@ public class Tarea {
 		this.actualizadaEn = ahora;
 	}
 
+	/** {@code null} la deja sin proyecto. Que el proyecto exista y sea del usuario lo verifica el service. */
+	public void asignarProyecto(UUID proyectoId, Instant ahora) {
+		this.proyectoId = proyectoId;
+		this.actualizadaEn = ahora;
+	}
+
 	public void cambiarPrioridad(Prioridad nueva, Instant ahora) {
 		Objects.requireNonNull(nueva);
 		if (nueva == prioridad) {
@@ -163,6 +172,10 @@ public class Tarea {
 
 	public UUID getUsuarioId() {
 		return usuarioId;
+	}
+
+	public UUID getProyectoId() {
+		return proyectoId;
 	}
 
 	public UUID getGrupoId() {

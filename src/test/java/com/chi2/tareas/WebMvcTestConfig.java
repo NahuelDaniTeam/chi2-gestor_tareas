@@ -4,7 +4,6 @@ import java.time.Clock;
 import java.time.Instant;
 
 import com.chi2.tareas.tarea.Calendario;
-import com.chi2.tareas.tarea.TareasProperties;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;

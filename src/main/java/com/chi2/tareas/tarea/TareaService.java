@@ -4,9 +4,11 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import com.chi2.tareas.proyecto.ProyectoNoEncontradoException;
+import com.chi2.tareas.proyecto.ProyectoService;
+import com.chi2.tareas.usuario.UsuarioActual;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +25,12 @@ public class TareaService {
 	private final TareaMapper mapper;
 	private final UsuarioActual usuario;
 	private final Calendario calendario;
+	private final ProyectoService proyectos;
 	private final Clock clock;
 
 	public TareaService(TareaRepository repository, TareaMapper mapper, UsuarioActual usuario, Calendario calendario,
-			Clock clock) {
+			ProyectoService proyectos, Clock clock) {
+		this.proyectos = proyectos;
 		this.repository = repository;
 		this.mapper = mapper;
 		this.usuario = usuario;
@@ -36,35 +40,35 @@ public class TareaService {
 
 	/**
 	 * Tareas planificadas dentro de un rango (§4.3): las de sus días, sus semanas y sus meses,
-	 * según {@link Rango#incluye}. {@code prioridad} y {@code estado} filtran si vienen.
+	 * según {@link Rango#incluye}.
 	 */
-	public List<TareaResponse> listar(Rango rango, Prioridad prioridad, EstadoTarea estado) {
+	public List<TareaResponse> listar(Rango rango, FiltroTareas filtro) {
 		List<Tarea> candidatas = rango.hasta() == null
 				? repository.findByUsuarioIdAndAmbitoAndFechaReferenciaGreaterThanEqual(usuario.id(), Ambito.PERSONAL,
 						rango.buscarDesde())
 				: repository.findByUsuarioIdAndAmbitoAndFechaReferenciaBetween(usuario.id(), Ambito.PERSONAL,
 						rango.buscarDesde(), rango.hasta());
-		return responder(candidatas.stream().filter(rango::incluye), prioridad, estado);
+		return responder(candidatas.stream().filter(rango::incluye), filtro);
 	}
 
 	/** Tareas creadas que todavía no tienen plazo ("Por planificar"). */
-	public List<TareaResponse> sinPlazo(Prioridad prioridad, EstadoTarea estado) {
+	public List<TareaResponse> sinPlazo(FiltroTareas filtro) {
 		return responder(repository.findByUsuarioIdAndAmbitoAndHorizonte(usuario.id(), Ambito.PERSONAL,
-				Horizonte.SIN_PLAZO).stream(), prioridad, estado);
+				Horizonte.SIN_PLAZO).stream(), filtro);
 	}
 
 	/**
 	 * Vista Hoy (§4.3): las del día y las que vencen hoy, más todas las vencidas sin terminar,
 	 * de cualquier plazo.
 	 */
-	public List<TareaResponse> hoy(Prioridad prioridad, EstadoTarea estado) {
+	public List<TareaResponse> hoy(FiltroTareas filtro) {
 		LocalDate hoy = calendario.hoy();
 		Rango deHoy = Rango.dia(hoy);
 		Stream<Tarea> delDia = repository.findByUsuarioIdAndAmbitoAndFechaReferenciaBetween(usuario.id(),
 				Ambito.PERSONAL, hoy, hoy).stream().filter(deHoy::incluye);
 		Stream<Tarea> vencidas = repository.findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(usuario.id(),
 				Ambito.PERSONAL, EstadoTarea.FINALIZADA, hoy).stream().filter(t -> t.estaVencida(hoy));
-		return responder(Stream.concat(delDia, vencidas), prioridad, estado);
+		return responder(Stream.concat(delDia, vencidas), filtro);
 	}
 
 	public TareaResponse obtener(UUID id) {
@@ -73,6 +77,7 @@ public class TareaService {
 
 	@Transactional
 	public TareaResponse crear(TareaRequest request) {
+		verificarProyecto(request.proyectoId());
 		Tarea tarea = mapper.aEntidad(request, fechaSegun(request.horizonte(), request.fechaReferencia()),
 				usuario.id(), clock.instant());
 		return mapper.aResponse(repository.save(tarea), calendario.hoy());
@@ -81,6 +86,7 @@ public class TareaService {
 	@Transactional
 	public TareaResponse editar(UUID id, TareaRequest request) {
 		Tarea tarea = buscar(id);
+		verificarProyecto(request.proyectoId());
 		mapper.aplicar(request, fechaSegun(request.horizonte(), request.fechaReferencia()), tarea, clock.instant());
 		return mapper.aResponse(tarea, calendario.hoy());
 	}
@@ -117,6 +123,17 @@ public class TareaService {
 				.orElseThrow(() -> new TareaNoEncontradaException(id));
 	}
 
+	private void verificarProyecto(UUID proyectoId) {
+		if (proyectoId == null) {
+			return;
+		}
+		try {
+			proyectos.verificar(proyectoId);
+		} catch (ProyectoNoEncontradoException e) {
+			throw new IllegalArgumentException("El proyecto elegido no existe.");
+		}
+	}
+
 	/** Con plazo, siempre hay fecha (hoy si no vino); sin plazo, nunca. */
 	private LocalDate fechaSegun(Horizonte horizonte, LocalDate fecha) {
 		if (!horizonte.exigeFecha()) {
@@ -125,18 +142,13 @@ public class TareaService {
 		return fecha != null ? fecha : calendario.hoy();
 	}
 
-	private List<TareaResponse> responder(Stream<Tarea> tareas, Prioridad prioridad, EstadoTarea estado) {
+	private List<TareaResponse> responder(Stream<Tarea> tareas, FiltroTareas filtro) {
 		LocalDate hoy = calendario.hoy();
 		return tareas
-				.filter(siViene(prioridad, Tarea::getPrioridad))
-				.filter(siViene(estado, Tarea::getEstado))
+				.filter(filtro.comoPredicado())
 				.sorted(OrdenTareas.POR_PRIORIDAD)
 				.map(t -> mapper.aResponse(t, hoy))
 				.toList();
-	}
-
-	private static <T> Predicate<Tarea> siViene(T valor, Function<Tarea, T> campo) {
-		return t -> valor == null || valor == campo.apply(t);
 	}
 
 }

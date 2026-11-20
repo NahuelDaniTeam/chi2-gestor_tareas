@@ -3,6 +3,8 @@ package com.chi2.tareas.api;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.chi2.tareas.proyecto.ProyectoDuplicadoException;
+import com.chi2.tareas.proyecto.ProyectoNoEncontradoException;
 import com.chi2.tareas.tarea.TareaNoEncontradaException;
 
 import org.springframework.http.HttpStatus;
@@ -50,6 +52,16 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(TareaNoEncontradaException.class)
 	public ProblemDetail noEncontrada() {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, TareaNoEncontradaException.MENSAJE);
+	}
+
+	@ExceptionHandler(ProyectoNoEncontradoException.class)
+	public ProblemDetail proyectoNoEncontrado() {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ProyectoNoEncontradoException.MENSAJE);
+	}
+
+	@ExceptionHandler(ProyectoDuplicadoException.class)
+	public ProblemDetail proyectoDuplicado(ProyectoDuplicadoException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 	}
 
 	private static Map<String, String> erroresPorCampo(BindException ex) {

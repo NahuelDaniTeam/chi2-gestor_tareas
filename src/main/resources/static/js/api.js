@@ -40,5 +40,9 @@ export const api = {
 	cambiarPlazo: (id, horizonte, fechaReferencia) => pedir("PATCH", `/api/tareas/${id}/plazo`, { horizonte, fechaReferencia }),
 	cambiarEstado: (id, estado) => pedir("PATCH", `/api/tareas/${id}/estado`, { estado }),
 	cambiarPrioridad: (id, prioridad) => pedir("PATCH", `/api/tareas/${id}/prioridad`, { prioridad }),
-	eliminar: id => pedir("DELETE", `/api/tareas/${id}`)
+	eliminar: id => pedir("DELETE", `/api/tareas/${id}`),
+	proyectos: () => pedir("GET", "/api/proyectos"),
+	crearProyecto: proyecto => pedir("POST", "/api/proyectos", proyecto),
+	editarProyecto: (id, proyecto) => pedir("PUT", `/api/proyectos/${id}`, proyecto),
+	eliminarProyecto: id => pedir("DELETE", `/api/proyectos/${id}`)
 };

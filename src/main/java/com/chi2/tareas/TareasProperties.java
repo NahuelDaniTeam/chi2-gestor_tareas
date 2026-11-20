@@ -1,4 +1,4 @@
-package com.chi2.tareas.tarea;
+package com.chi2.tareas;
 
 import java.time.ZoneId;
 import java.util.UUID;

@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
+import com.chi2.tareas.TareasProperties;
+
 import org.springframework.stereotype.Component;
 
 /** Qué día es hoy en la zona del usuario, y los períodos que muestran las vistas (§4.3). */

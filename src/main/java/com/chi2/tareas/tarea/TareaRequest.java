@@ -1,6 +1,7 @@
 package com.chi2.tareas.tarea;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import jakarta.validation.constraints.Size;
  * @param fechaReferencia cualquier día del período: se lleva al lunes o al primero del mes según el plazo.
  *                        Si falta y el plazo la exige, se usa hoy. Sin plazo se ignora.
  * @param prioridad si falta, {@link Prioridad#POR_DEFECTO}
+ * @param proyectoId opcional; tiene que ser un proyecto del usuario
  */
 public record TareaRequest(
 
@@ -27,7 +29,9 @@ public record TareaRequest(
 
 		LocalDate fechaReferencia,
 
-		Prioridad prioridad) {
+		Prioridad prioridad,
+
+		UUID proyectoId) {
 
 	public TareaRequest {
 		titulo = titulo == null ? null : titulo.strip();

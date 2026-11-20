@@ -1,6 +1,6 @@
 /**
  * Atajos del alta rápida (docs/01-especificacion.md §4.2), escritos en cualquier parte del texto:
- * "!a" cambia la prioridad; "@s", "@mañana", "@viernes" o "@p" cambian el plazo.
+ * "!a" cambia la prioridad; "@s", "@mañana", "@viernes" o "@p" cambian el plazo; "#tesis" elige el proyecto.
  * Módulo sin DOM, testeado en src/test/js.
  */
 
@@ -28,6 +28,18 @@ const ATAJOS_DIA = Object.freeze({
 });
 
 const ATAJO = /(^|\s)([!@])(\p{L}+)(?=\s|$)/gu;
+const PROYECTO = /(^|\s)#([\p{L}\p{N}][\p{L}\p{N}_-]*)(?=\s|$)/gu;
+
+/** Para comparar nombres: sin mayúsculas, tildes, espacios, guiones ni guiones bajos. */
+export function normalizar(texto) {
+	return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[\s_-]+/g, "");
+}
+
+/** El proyecto cuyo nombre coincide con lo escrito ("#redes_de_datos" encuentra "Redes de Datos"), o undefined. */
+export function buscarPorNombre(proyectos, nombre) {
+	const buscado = normalizar(nombre);
+	return proyectos.find(p => normalizar(p.nombre) === buscado);
+}
 
 /** Fecha del atajo de día: "+n" días desde hoy, o el próximo día de la semana (hoy si coincide). */
 function fechaDeDia(valor, hoy) {
@@ -41,12 +53,19 @@ function fechaDeDia(valor, hoy) {
  *
  * @param {string} texto lo que escribió el usuario
  * @param {{prioridad: string, horizonte: string, fecha: string|null, hoy: string}} base valores de los selectores
- * @returns {{titulo, prioridad, horizonte, fecha, conAtajos}} fecha ISO, o null sin plazo
+ * @returns {{titulo, prioridad, horizonte, fecha, proyecto, conAtajos}} fecha ISO (null sin plazo);
+ *          proyecto: el nombre escrito con "#" (guiones bajos como espacios), o null
  */
 export function interpretar(texto, base) {
 	let { prioridad, horizonte, fecha } = base;
 	let conAtajos = false;
-	const titulo = texto.replace(ATAJO, (todo, espacio, signo, palabra) => {
+	let proyecto = null;
+	const sinProyecto = texto.replace(PROYECTO, (todo, espacio, nombre) => {
+		proyecto = nombre.replace(/_/g, " ");
+		conAtajos = true;
+		return espacio;
+	});
+	const titulo = sinProyecto.replace(ATAJO, (todo, espacio, signo, palabra) => {
 		const clave = palabra.toLowerCase();
 		if (signo === "!" && ATAJOS_PRIORIDAD[clave]) {
 			prioridad = ATAJOS_PRIORIDAD[clave];
@@ -63,5 +82,5 @@ export function interpretar(texto, base) {
 		conAtajos = true;
 		return espacio;
 	}).replace(/\s+/g, " ").trim();
-	return { titulo, prioridad, horizonte, fecha, conAtajos };
+	return { titulo, prioridad, horizonte, fecha, proyecto, conAtajos };
 }

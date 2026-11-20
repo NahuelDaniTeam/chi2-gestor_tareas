@@ -64,7 +64,10 @@ scripts/                       abrir la app y crear el acceso directo en Windows
 src/main/java/com/chi2/tareas/
 ├── GestorTareasApplication.java
 ├── ConfiguracionGeneral.java  Clock (UTC)
-├── tarea/                     tareas: dominio, calendario, service, repository, páginas (docs/01)
+├── TareasProperties.java      chi2.tareas.* (zona horaria, usuario local)
+├── usuario/                   UsuarioActual: quién usa la app (etapa 1: UsuarioLocal, sin login)
+├── tarea/                     tareas: dominio, plazos (Rango), calendario, service, repository, páginas (docs/01)
+├── proyecto/                  proyectos o etiquetas de las tareas (§4.6)
 └── api/                       @RestController bajo /api/... y su manejo de errores
 src/main/resources/
 ├── templates/                 vistas Thymeleaf (fragments/layout.html = piezas compartidas)

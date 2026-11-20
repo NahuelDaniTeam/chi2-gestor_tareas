@@ -8,6 +8,7 @@ import com.chi2.tareas.tarea.CambioEstadoRequest;
 import com.chi2.tareas.tarea.CambioPlazoRequest;
 import com.chi2.tareas.tarea.CambioPrioridadRequest;
 import com.chi2.tareas.tarea.EstadoTarea;
+import com.chi2.tareas.tarea.FiltroTareas;
 import com.chi2.tareas.tarea.Prioridad;
 import com.chi2.tareas.tarea.Rango;
 import com.chi2.tareas.tarea.TareaRequest;
@@ -53,22 +54,23 @@ public class TareaApiController {
 			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
 			@RequestParam(required = false) Prioridad prioridad,
-			@RequestParam(required = false) EstadoTarea estado) {
-		return service.listar(new Rango(desde, hasta), prioridad, estado);
+			@RequestParam(required = false) EstadoTarea estado,
+			@RequestParam(required = false) UUID proyecto) {
+		return service.listar(new Rango(desde, hasta), new FiltroTareas(prioridad, estado, proyecto));
 	}
 
 	/** Vista Hoy: las del día y las que vencen hoy, más las vencidas sin terminar. */
 	@GetMapping("/hoy")
 	public List<TareaResponse> hoy(@RequestParam(required = false) Prioridad prioridad,
-			@RequestParam(required = false) EstadoTarea estado) {
-		return service.hoy(prioridad, estado);
+			@RequestParam(required = false) EstadoTarea estado, @RequestParam(required = false) UUID proyecto) {
+		return service.hoy(new FiltroTareas(prioridad, estado, proyecto));
 	}
 
 	/** Por planificar: tareas sin plazo. */
 	@GetMapping("/sin-plazo")
 	public List<TareaResponse> sinPlazo(@RequestParam(required = false) Prioridad prioridad,
-			@RequestParam(required = false) EstadoTarea estado) {
-		return service.sinPlazo(prioridad, estado);
+			@RequestParam(required = false) EstadoTarea estado, @RequestParam(required = false) UUID proyecto) {
+		return service.sinPlazo(new FiltroTareas(prioridad, estado, proyecto));
 	}
 
 	@GetMapping("/{id}")

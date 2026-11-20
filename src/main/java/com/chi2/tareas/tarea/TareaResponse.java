@@ -18,6 +18,7 @@ public record TareaResponse(
 		Prioridad prioridad,
 		EstadoTarea estado,
 		Ambito ambito,
+		UUID proyectoId,
 		boolean vencida,
 		Instant creadaEn,
 		Instant actualizadaEn,

@@ -1,19 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { interpretar } from "../../main/resources/static/js/atajos.js";
+import { buscarPorNombre, interpretar, normalizar } from "../../main/resources/static/js/atajos.js";
 
 // Jueves 19/11/2026, en la vista Hoy
 const BASE = Object.freeze({ prioridad: "MEDIA", horizonte: "DIA", fecha: "2026-11-19", hoy: "2026-11-19" });
 
 test("sin atajos devuelve el texto y los valores elegidos", () => {
 	assert.deepEqual(interpretar("  Llamar al director  ", BASE),
-		{ titulo: "Llamar al director", prioridad: "MEDIA", horizonte: "DIA", fecha: "2026-11-19", conAtajos: false });
+		{ titulo: "Llamar al director", prioridad: "MEDIA", horizonte: "DIA", fecha: "2026-11-19", proyecto: null, conAtajos: false });
 });
 
 test("prioridad y plazo salen del título", () => {
 	assert.deepEqual(interpretar("Entregar capítulo 2 !a @s", BASE),
-		{ titulo: "Entregar capítulo 2", prioridad: "ALTA", horizonte: "SEMANA", fecha: "2026-11-19", conAtajos: true });
+		{ titulo: "Entregar capítulo 2", prioridad: "ALTA", horizonte: "SEMANA", fecha: "2026-11-19", proyecto: null, conAtajos: true });
 });
 
 test("@p deja la tarea por planificar, sin fecha", () => {
@@ -48,6 +48,25 @@ test("funcionan en cualquier posición y sin importar mayúsculas", () => {
 test("un atajo que no existe o pegado a una palabra queda como texto", () => {
 	assert.equal(interpretar("Escribir a hola@mes.com !urgente", BASE).titulo, "Escribir a hola@mes.com !urgente");
 	assert.equal(interpretar("Escribir a hola@mes.com !urgente", BASE).conAtajos, false);
+});
+
+test("#proyecto sale del título; guion bajo es espacio", () => {
+	const r = interpretar("Escribir introducción #Redes_de_Datos !a", BASE);
+	assert.equal(r.titulo, "Escribir introducción");
+	assert.equal(r.proyecto, "Redes de Datos");
+	assert.equal(r.prioridad, "ALTA");
+	assert.equal(interpretar("Tema #2 del parcial", BASE).proyecto, "2");
+	assert.equal(interpretar("Sin proyecto", BASE).proyecto, null);
+	assert.equal(interpretar("Precio#1", BASE).titulo, "Precio#1", "pegado a una palabra no es atajo");
+});
+
+test("los proyectos se buscan sin importar tildes, mayúsculas ni separadores", () => {
+	const proyectos = [{ id: "1", nombre: "Tesis" }, { id: "2", nombre: "Redes de Datos" }, { id: "3", nombre: "Facultad" }];
+	assert.equal(buscarPorNombre(proyectos, "tesis").id, "1");
+	assert.equal(buscarPorNombre(proyectos, "redes de datos").id, "2");
+	assert.equal(buscarPorNombre(proyectos, "REDES-DATOS"), undefined);
+	assert.equal(buscarPorNombre(proyectos, "facultád").id, "3");
+	assert.equal(normalizar("  Árbol_de-Ideas "), "arboldeideas");
 });
 
 test("si se repite, gana el último", () => {

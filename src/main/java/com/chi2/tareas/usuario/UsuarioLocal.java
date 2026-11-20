@@ -1,6 +1,8 @@
-package com.chi2.tareas.tarea;
+package com.chi2.tareas.usuario;
 
 import java.util.UUID;
+
+import com.chi2.tareas.TareasProperties;
 
 import org.springframework.stereotype.Component;
 

@@ -50,6 +50,7 @@ export function iniciarPanel(contexto, alCerrar) {
 		campo("prioridad").value = t.prioridad;
 		campo("horizonte").value = t.horizonte;
 		campo("fechaReferencia").value = t.fechaReferencia || "";
+		campo("proyectoId").value = t.proyectoId || "";
 		ajustarFecha();
 		mostrarMeta();
 		mostrarError(null);
@@ -110,7 +111,8 @@ export function iniciarPanel(contexto, alCerrar) {
 			descripcion: campo("descripcion").value,
 			horizonte,
 			fechaReferencia: fecha,
-			prioridad: campo("prioridad").value
+			prioridad: campo("prioridad").value,
+			proyectoId: campo("proyectoId").value || null
 		};
 	}
 
@@ -156,7 +158,7 @@ export function iniciarPanel(contexto, alCerrar) {
 	}
 
 	// Selectores, opciones y fecha: al cambiar. Textos: al salir del campo (evento change).
-	for (const nombre of ["estado", "prioridad", "horizonte", "fechaReferencia", "titulo", "descripcion"]) {
+	for (const nombre of ["estado", "prioridad", "horizonte", "fechaReferencia", "titulo", "descripcion", "proyectoId"]) {
 		const elementos = form.querySelectorAll(`[name="${nombre}"]`);
 		elementos.forEach(e => e.addEventListener("change", () => {
 			if (nombre === "horizonte") ajustarFecha();

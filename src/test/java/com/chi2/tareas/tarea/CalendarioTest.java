@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 
+import com.chi2.tareas.TareasProperties;
 import com.chi2.tareas.RelojDeTest;
 
 import org.junit.jupiter.api.Test;

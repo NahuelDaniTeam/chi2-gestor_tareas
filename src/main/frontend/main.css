@@ -167,6 +167,19 @@
   .chip.detectado {
     @apply border-acento/50 bg-acento/5 text-acento;
   }
+  .punto-proyecto {
+    @apply size-2 rounded-full bg-transparent ring-1 ring-tinta/25;
+  }
+  .punto-proyecto[style*="background-color"] {
+    @apply ring-0;
+  }
+  .chip-filtro {
+    @apply py-1.5 text-sm;
+  }
+  .muestra-color {
+    @apply size-5 shrink-0 rounded-full ring-2 ring-superficie transition hover:scale-110 hover:ring-linea;
+  }
+
   .chip-prioridad .punto {
     @apply bg-tinta/35;
   }

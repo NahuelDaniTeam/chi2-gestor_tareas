@@ -1,4 +1,4 @@
-package com.chi2.tareas.tarea;
+package com.chi2.tareas.usuario;
 
 import java.util.UUID;
 

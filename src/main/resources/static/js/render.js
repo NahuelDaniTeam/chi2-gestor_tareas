@@ -214,6 +214,8 @@ function pastilla(t, contexto, acciones) {
 		el("span", "truncate", t.titulo));
 	b.type = "button";
 	b.title = t.titulo + (t.horizonte === "LIMITE" ? " (fecha límite)" : "");
+	const proyecto = contexto.proyectoDe(t.proyectoId);
+	if (proyecto) b.style.boxShadow = `inset 2px 0 0 ${proyecto.hex}`;
 	b.addEventListener("click", () => acciones.abrir(t));
 	hacerArrastrable(b, t);
 	return b;
@@ -293,8 +295,19 @@ function tituloTarea(t, clases) {
 	return el("span", `titulo-tarea block break-words ${clases}${finalizada}`, t.titulo, nota);
 }
 
+/** Nombre y color del proyecto, salvo que la vista ya esté filtrada por ese proyecto. */
+function etiquetaProyecto(t, contexto) {
+	const proyecto = contexto.proyectoDe(t.proyectoId);
+	if (!proyecto || contexto.filtroProyecto() === proyecto.id) return null;
+	const punto = el("span", "punto");
+	punto.style.backgroundColor = proyecto.hex;
+	return el("span", "inline-flex items-center gap-1.5", punto, proyecto.nombre);
+}
+
 function meta(t, contexto, { conEstado }) {
 	const partes = [];
+	const proyecto = etiquetaProyecto(t, contexto);
+	if (proyecto) partes.push(proyecto);
 	if (t.prioridad !== "MEDIA") {
 		partes.push(el("span", "inline-flex items-center gap-1.5" + (t.prioridad === "ALTA" ? " font-medium text-acento" : ""),
 			el("span", `punto punto-${t.prioridad}`), PRIORIDADES[t.prioridad]));
