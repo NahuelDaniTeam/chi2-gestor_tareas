@@ -37,7 +37,8 @@ class TareaTest {
 	@Test
 	void diaSemanaYMesExigenFecha() {
 		assertThatThrownBy(() -> tarea(Horizonte.SEMANA, null)).isInstanceOf(IllegalArgumentException.class);
-		assertThat(tarea(Horizonte.LARGO_PLAZO, null).getFechaReferencia()).isNull();
+		assertThatThrownBy(() -> tarea(Horizonte.LIMITE, null)).isInstanceOf(IllegalArgumentException.class);
+		assertThat(tarea(Horizonte.SIN_PLAZO, null).getFechaReferencia()).isNull();
 	}
 
 	@Test
@@ -67,6 +68,19 @@ class TareaTest {
 	}
 
 	@Test
+	void planificarYDesplanificar() {
+		Tarea tarea = tarea(Horizonte.SIN_PLAZO, null);
+
+		tarea.cambiarPlazo(Horizonte.SEMANA, HOY, DESPUES);
+		assertThat(tarea.getHorizonte()).isEqualTo(Horizonte.SEMANA);
+		assertThat(tarea.getFechaReferencia()).isEqualTo("2026-11-16");
+		assertThat(tarea.getActualizadaEn()).isEqualTo(DESPUES);
+
+		tarea.cambiarPlazo(Horizonte.SIN_PLAZO, HOY, DESPUES);
+		assertThat(tarea.getFechaReferencia()).isNull();
+	}
+
+	@Test
 	void cambiarLaPrioridadActualizaLaModificacion() {
 		Tarea tarea = tarea(Horizonte.DIA, HOY);
 
@@ -83,8 +97,9 @@ class TareaTest {
 		// la semana del 16 sigue en curso el 19
 		assertThat(tarea(Horizonte.SEMANA, HOY.minusDays(3)).estaVencida(HOY)).isFalse();
 		assertThat(tarea(Horizonte.SEMANA, HOY.minusWeeks(1)).estaVencida(HOY)).isTrue();
-		assertThat(tarea(Horizonte.LARGO_PLAZO, null).estaVencida(HOY)).isFalse();
-		assertThat(tarea(Horizonte.LARGO_PLAZO, HOY.minusDays(1)).estaVencida(HOY)).isTrue();
+		assertThat(tarea(Horizonte.SIN_PLAZO, null).estaVencida(HOY)).isFalse();
+		assertThat(tarea(Horizonte.LIMITE, HOY.minusDays(1)).estaVencida(HOY)).isTrue();
+		assertThat(tarea(Horizonte.MES, HOY.minusMonths(1)).estaVencida(HOY)).isTrue();
 
 		Tarea finalizada = tarea(Horizonte.DIA, HOY.minusDays(1));
 		finalizada.cambiarEstado(EstadoTarea.FINALIZADA, DESPUES);

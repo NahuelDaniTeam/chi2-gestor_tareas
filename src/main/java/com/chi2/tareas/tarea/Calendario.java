@@ -28,24 +28,35 @@ public class Calendario {
 		return LocalDate.ofInstant(clock.instant(), properties.zona());
 	}
 
-	/** La vista Hoy: siempre el día actual, sin navegación a otros días. */
-	public Periodo periodoHoy() {
+	/** Siempre el día actual, sin navegación a otros días. */
+	public Periodo hoyComoPeriodo() {
 		LocalDate hoy = hoy();
-		return new Periodo(Horizonte.DIA, hoy, periodo(Horizonte.DIA, hoy).titulo(), null, null);
+		return new Periodo(hoy, capitalizar(DIA.format(hoy)), null, null, Rango.dia(hoy));
 	}
 
-	/** Período del horizonte que contiene a {@code fecha}, con el anterior y el siguiente. */
-	public Periodo periodo(Horizonte horizonte, LocalDate fecha) {
-		LocalDate inicio = horizonte.fechaReferencia(fecha);
-		return switch (horizonte) {
-			case DIA -> new Periodo(horizonte, inicio, capitalizar(DIA.format(inicio)),
-					inicio.minusDays(1), inicio.plusDays(1));
-			case SEMANA -> new Periodo(horizonte, inicio, tituloSemana(inicio),
-					inicio.minusWeeks(1), inicio.plusWeeks(1));
-			case MES -> new Periodo(horizonte, inicio, tituloMes(inicio),
-					inicio.minusMonths(1), inicio.plusMonths(1));
-			case LARGO_PLAZO -> new Periodo(horizonte, null, "Sin fecha fija", null, null);
-		};
+	/** La semana (lunes a domingo) que contiene a {@code fecha}. */
+	public Periodo semana(LocalDate fecha) {
+		LocalDate lunes = Horizonte.SEMANA.fechaReferencia(fecha);
+		return new Periodo(lunes, tituloSemana(lunes), lunes.minusWeeks(1), lunes.plusWeeks(1),
+				new Rango(lunes, Horizonte.SEMANA.fin(lunes)));
+	}
+
+	/** El mes que contiene a {@code fecha}. */
+	public Periodo mes(LocalDate fecha) {
+		LocalDate primero = Horizonte.MES.fechaReferencia(fecha);
+		return new Periodo(primero, tituloMes(primero), primero.minusMonths(1), primero.plusMonths(1),
+				new Rango(primero, Horizonte.MES.fin(primero)));
+	}
+
+	/** Todo lo planificado desde el mes que viene en adelante, agrupado por mes. */
+	public Periodo largoPlazo() {
+		LocalDate proximoMes = Horizonte.MES.fechaReferencia(hoy()).plusMonths(1);
+		return new Periodo(proximoMes, "Próximos meses", null, null, Rango.desde(proximoMes));
+	}
+
+	/** Tareas sin plazo: no tiene fechas. */
+	public Periodo porPlanificar() {
+		return new Periodo(null, "Sin plazo todavía", null, null, null);
 	}
 
 	/** "Del 16 al 22 de noviembre" o, si cruza de mes, "Del 30 de noviembre al 6 de diciembre". */

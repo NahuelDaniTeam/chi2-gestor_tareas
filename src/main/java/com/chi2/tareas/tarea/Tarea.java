@@ -28,7 +28,7 @@ public class Tarea {
 	private String descripcion;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 12)
+	@Column(nullable = false, length = 10)
 	private Horizonte horizonte;
 
 	@Column(name = "fecha_referencia")
@@ -78,23 +78,28 @@ public class Tarea {
 		editar(titulo, descripcion, horizonte, fecha, prioridad, ahora);
 	}
 
-	/**
-	 * Cambia los datos editables. La fecha se lleva a la fecha de referencia del horizonte
-	 * (lunes de la semana, primero del mes).
-	 *
-	 * @throws IllegalArgumentException si el horizonte exige fecha y no vino
-	 */
+	/** Cambia los datos editables, plazo incluido (ver {@link #cambiarPlazo}). */
 	public void editar(String titulo, String descripcion, Horizonte horizonte, LocalDate fecha, Prioridad prioridad,
 			Instant ahora) {
-		Objects.requireNonNull(horizonte);
-		if (horizonte.exigeFecha() && fecha == null) {
-			throw new IllegalArgumentException("El horizonte " + horizonte + " necesita una fecha");
-		}
 		this.titulo = Objects.requireNonNull(titulo);
 		this.descripcion = descripcion;
+		this.prioridad = Objects.requireNonNull(prioridad);
+		cambiarPlazo(horizonte, fecha, ahora);
+	}
+
+	/**
+	 * Planifica la tarea. La fecha se lleva a la referencia del plazo (lunes de la semana, primero del mes);
+	 * sin plazo se descarta.
+	 *
+	 * @throws IllegalArgumentException si el plazo exige fecha y no vino
+	 */
+	public void cambiarPlazo(Horizonte horizonte, LocalDate fecha, Instant ahora) {
+		Objects.requireNonNull(horizonte);
+		if (horizonte.exigeFecha() && fecha == null) {
+			throw new IllegalArgumentException("El plazo " + horizonte + " necesita una fecha");
+		}
 		this.horizonte = horizonte;
 		this.fechaReferencia = horizonte.fechaReferencia(fecha);
-		this.prioridad = Objects.requireNonNull(prioridad);
 		this.actualizadaEn = ahora;
 	}
 

@@ -41,6 +41,12 @@ public class ApiExceptionHandler {
 				"Falta o no es válido el parámetro '" + parametro + "'.");
 	}
 
+	/** Por ejemplo, un rango que termina antes de empezar. */
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ProblemDetail argumentoInvalido(IllegalArgumentException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
+
 	@ExceptionHandler(TareaNoEncontradaException.class)
 	public ProblemDetail noEncontrada() {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, TareaNoEncontradaException.MENSAJE);

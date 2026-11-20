@@ -48,6 +48,7 @@
 				   th:attr="aria-current=${v == vista} ? 'page' : null">
 					<span th:text="${v.etiqueta}">Vista</span>
 					<span th:if="${v.name() == 'HOY'}" class="contador" data-contador-hoy hidden></span>
+					<span th:if="${v.name() == 'POR_PLANIFICAR'}" class="contador contador-suave" data-contador-sin-plazo hidden></span>
 				</a>
 			</li>
 		</ul>

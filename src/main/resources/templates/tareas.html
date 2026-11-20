@@ -4,11 +4,11 @@
 <body class="bg-fondo font-sans text-tinta antialiased">
 <header th:replace="~{fragments/layout :: encabezado}"></header>
 
-<main id="app" class="contenedor pb-28"
+<main id="app" class="contenedor pb-28" th:classappend="${vista.conCalendario} ? 'contenedor-ancho'"
       th:data-url-lista="${urlLista}"
       th:data-vista="${vista.name()}"
-      th:data-horizonte="${vista.horizonte.name()}"
       th:data-fecha-vista="${periodo.fecha()}"
+      th:data-con-calendario="${vista.conCalendario}"
       th:data-hoy="${hoy}">
 
 	<!-- Vista y período -->
@@ -43,13 +43,17 @@
 			<button id="alta-guardar" type="submit" class="boton-principal hidden sm:inline-flex" disabled>Agregar</button>
 		</div>
 		<div class="flex flex-wrap items-center gap-2 px-3 pt-2 pb-3 sm:px-4">
-			<label class="chip" title="Horizonte (@d, @s, @m, @l)">
+			<label class="chip" title="Plazo (@hoy, @mañana, @viernes, @s, @m, @p)">
 				<svg th:replace="~{fragments/layout :: icono('calendario', 'size-3.5')}"></svg>
-				<span class="sr-only">Horizonte</span>
+				<span class="sr-only">Plazo</span>
 				<select id="alta-horizonte">
 					<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}"
-					        th:selected="${h == vista.horizonte}">Día</option>
+					        th:selected="${h == vista.plazoAlta}">Día</option>
 				</select>
+			</label>
+			<label class="chip" title="Fecha">
+				<span class="sr-only">Fecha</span>
+				<input id="alta-fecha" type="date" th:value="${fechaAlta}">
 			</label>
 			<label class="chip chip-prioridad" title="Prioridad (!a, !m, !b)" data-prioridad="MEDIA">
 				<span class="punto"></span>
@@ -70,6 +74,9 @@
 	<div class="mt-9 flex items-center justify-between gap-4">
 		<p id="resumen" class="text-sm text-tenue tabular-nums" aria-live="polite"></p>
 		<div class="segmentado" role="group" aria-label="Mostrar como">
+			<button th:if="${vista.conCalendario}" type="button" data-modo="calendario" aria-pressed="false" title="Calendario (t)">
+				<svg th:replace="~{fragments/layout :: icono('calendario', 'size-4')}"></svg>Calendario
+			</button>
 			<button type="button" data-modo="lista" aria-pressed="true" title="Lista (t)">
 				<svg th:replace="~{fragments/layout :: icono('lista', 'size-4')}"></svg>Lista
 			</button>
@@ -98,6 +105,9 @@
 
 	<section id="lista" class="mt-5" aria-label="Tareas" hidden></section>
 
+	<!-- Calendario (Semana y Mes): se arrastra entre días, a la semana o al mes para reprogramar -->
+	<section th:if="${vista.conCalendario}" id="calendario" class="mt-5" aria-label="Calendario" hidden></section>
+
 	<!-- Tablero por estado (§4.4) -->
 	<section id="tablero" class="mt-5 grid gap-5 md:grid-cols-3" aria-label="Tablero" hidden>
 		<div th:each="e : ${estados}" class="rounded-2xl bg-linea/35 p-2">
@@ -105,13 +115,13 @@
 				<span th:text="${e.etiqueta}">Pendiente</span>
 				<span class="text-xs tabular-nums text-tenue" th:data-contador="${e.name()}">0</span>
 			</h2>
-			<div class="columna" th:data-estado="${e.name()}" th:aria-label="${e.etiqueta}"></div>
+			<div class="columna" th:data-soltar-estado="${e.name()}" th:aria-label="${e.etiqueta}"></div>
 		</div>
 	</section>
 
 	<div id="vacio" class="mt-5 rounded-xl border border-dashed border-linea px-6 py-16 text-center" hidden>
-		<p class="font-display text-3xl" th:text="${vista.name() == 'HOY'} ? 'Día despejado' : 'Nada planificado'">Día despejado</p>
-		<p class="mt-2 text-tenue">Escribí una tarea arriba y apretá Enter.</p>
+		<p class="font-display text-3xl" th:text="${vista.name() == 'HOY'} ? 'Día despejado' : (${vista.name() == 'POR_PLANIFICAR'} ? 'Todo planificado' : 'Nada planificado')">Día despejado</p>
+		<p class="mt-2 text-tenue" th:text="${vista.name() == 'POR_PLANIFICAR'} ? 'Las tareas que cargues sin plazo esperan acá hasta que las planifiques.' : 'Escribí una tarea arriba y apretá Enter.'">Escribí una tarea arriba y apretá Enter.</p>
 	</div>
 </main>
 
@@ -146,19 +156,17 @@
 			</div>
 		</fieldset>
 
-		<div class="grid grid-cols-2 gap-4">
-			<div>
-				<label for="p-horizonte" class="rotulo">Horizonte</label>
-				<select id="p-horizonte" name="horizonte" class="campo">
-					<option th:each="h : ${horizontes}" th:value="${h.name()}" th:text="${h.etiqueta}">Día</option>
-				</select>
+		<fieldset>
+			<legend class="rotulo">Plazo</legend>
+			<div class="segmentado segmentado-ancho segmentado-chico">
+				<label th:each="h : ${horizontes}"><input type="radio" name="horizonte" th:value="${h.name()}" class="sr-only"><span th:text="${h.name() == 'LIMITE'} ? 'Límite' : ${h.etiqueta}">Día</span></label>
 			</div>
-			<div>
-				<label for="p-fecha" id="p-fecha-label" class="rotulo">Fecha</label>
+			<div id="p-fecha-bloque" class="mt-3 flex items-center gap-3">
+				<label for="p-fecha" id="p-fecha-label" class="w-16 shrink-0 text-sm text-tenue">Fecha</label>
 				<input id="p-fecha" name="fechaReferencia" type="date" class="campo">
 			</div>
-			<p id="p-fecha-ayuda" class="col-span-2 -mt-2 text-xs text-tenue empty:hidden"></p>
-		</div>
+			<p id="p-fecha-ayuda" class="mt-2 text-xs text-tenue empty:hidden"></p>
+		</fieldset>
 
 		<div>
 			<label for="p-descripcion" class="rotulo">Descripción</label>
@@ -194,8 +202,10 @@
 			<h3 class="rotulo">Al escribir una tarea</h3>
 			<dl class="atajos">
 				<dt><kbd>!a</kbd> <kbd>!m</kbd> <kbd>!b</kbd></dt><dd>Prioridad alta, media o baja</dd>
-				<dt><kbd>@d</kbd> <kbd>@s</kbd></dt><dd>Para hoy o esta semana</dd>
-				<dt><kbd>@m</kbd> <kbd>@l</kbd></dt><dd>Este mes o largo plazo</dd>
+				<dt><kbd>@hoy</kbd> <kbd>@mañana</kbd></dt><dd>Para hoy o mañana</dd>
+				<dt><kbd>@lunes</kbd> … <kbd>@vie</kbd></dt><dd>El próximo día de la semana</dd>
+				<dt><kbd>@s</kbd> <kbd>@m</kbd></dt><dd>Esta semana o este mes</dd>
+				<dt><kbd>@p</kbd></dt><dd>Sin plazo (por planificar)</dd>
 				<dt><kbd>Enter</kbd></dt><dd>Guardar</dd>
 			</dl>
 			<p class="mt-3 text-xs text-tenue">Ejemplo: <span class="text-tinta">Entregar capítulo 2 !a @s</span></p>
@@ -204,9 +214,9 @@
 			<h3 class="rotulo">En cualquier parte</h3>
 			<dl class="atajos">
 				<dt><kbd>N</kbd> o <kbd>/</kbd></dt><dd>Nueva tarea</dd>
-				<dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>Hoy, Semana, Mes, Largo plazo</dd>
+				<dt><kbd>1</kbd>–<kbd>5</kbd></dt><dd>Hoy, Semana, Mes, Largo plazo, Por planificar</dd>
 				<dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Período anterior o siguiente</dd>
-				<dt><kbd>T</kbd></dt><dd>Lista o tablero</dd>
+				<dt><kbd>T</kbd></dt><dd>Cambiar entre calendario, lista y tablero</dd>
 				<dt><kbd>Esc</kbd></dt><dd>Cerrar el panel</dd>
 				<dt><kbd>?</kbd></dt><dd>Esta ayuda</dd>
 			</dl>

@@ -37,6 +37,7 @@ export const api = {
 	listar: url => pedir("GET", url),
 	crear: tarea => pedir("POST", "/api/tareas", tarea),
 	editar: (id, tarea) => pedir("PUT", `/api/tareas/${id}`, tarea),
+	cambiarPlazo: (id, horizonte, fechaReferencia) => pedir("PATCH", `/api/tareas/${id}/plazo`, { horizonte, fechaReferencia }),
 	cambiarEstado: (id, estado) => pedir("PATCH", `/api/tareas/${id}/estado`, { estado }),
 	cambiarPrioridad: (id, prioridad) => pedir("PATCH", `/api/tareas/${id}/prioridad`, { prioridad }),
 	eliminar: id => pedir("DELETE", `/api/tareas/${id}`)

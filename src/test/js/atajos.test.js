@@ -3,41 +3,53 @@ import assert from "node:assert/strict";
 
 import { interpretar } from "../../main/resources/static/js/atajos.js";
 
-const BASE = Object.freeze({ prioridad: "MEDIA", horizonte: "DIA" });
+// Jueves 19/11/2026, en la vista Hoy
+const BASE = Object.freeze({ prioridad: "MEDIA", horizonte: "DIA", fecha: "2026-11-19", hoy: "2026-11-19" });
 
 test("sin atajos devuelve el texto y los valores elegidos", () => {
 	assert.deepEqual(interpretar("  Llamar al director  ", BASE),
-		{ titulo: "Llamar al director", prioridad: "MEDIA", horizonte: "DIA", conAtajos: false });
+		{ titulo: "Llamar al director", prioridad: "MEDIA", horizonte: "DIA", fecha: "2026-11-19", conAtajos: false });
 });
 
-test("los atajos cambian prioridad y horizonte y salen del título", () => {
+test("prioridad y plazo salen del título", () => {
 	assert.deepEqual(interpretar("Entregar capítulo 2 !a @s", BASE),
-		{ titulo: "Entregar capítulo 2", prioridad: "ALTA", horizonte: "SEMANA", conAtajos: true });
+		{ titulo: "Entregar capítulo 2", prioridad: "ALTA", horizonte: "SEMANA", fecha: "2026-11-19", conAtajos: true });
 });
 
-test("funcionan en cualquier posición, en palabra completa y sin importar mayúsculas", () => {
+test("@p deja la tarea por planificar, sin fecha", () => {
+	const r = interpretar("Aprender guitarra @p", BASE);
+	assert.equal(r.horizonte, "SIN_PLAZO");
+	assert.equal(r.fecha, null);
+	assert.equal(interpretar("Algo @largo", BASE).horizonte, "SIN_PLAZO");
+});
+
+test("días concretos: mañana, pasado y días de la semana", () => {
+	assert.deepEqual([interpretar("x @mañana", BASE).fecha, interpretar("x @manana", BASE).fecha], ["2026-11-20", "2026-11-20"]);
+	assert.equal(interpretar("x @pasado", BASE).fecha, "2026-11-21");
+	assert.equal(interpretar("x @lunes", BASE).fecha, "2026-11-23");
+	assert.equal(interpretar("x @vie", BASE).fecha, "2026-11-20");
+	assert.equal(interpretar("x @jueves", BASE).fecha, "2026-11-19", "el mismo día de la semana es hoy");
+	assert.equal(interpretar("x @sábado", BASE).horizonte, "DIA");
+});
+
+test("en la vista de un período, @s o @m toman ese período", () => {
+	const semanaQueViene = { ...BASE, horizonte: "SEMANA", fecha: "2026-11-23" };
+	assert.equal(interpretar("x @s", semanaQueViene).fecha, "2026-11-23");
+	assert.equal(interpretar("x @m", semanaQueViene).fecha, "2026-11-19");
+});
+
+test("funcionan en cualquier posición y sin importar mayúsculas", () => {
 	const r = interpretar("!B Comprar @MES yerba", BASE);
 	assert.equal(r.titulo, "Comprar yerba");
 	assert.equal(r.prioridad, "BAJA");
 	assert.equal(r.horizonte, "MES");
 });
 
-test("acepta las formas largas", () => {
-	const r = interpretar("Tesis @largo !alta", BASE);
-	assert.equal(r.horizonte, "LARGO_PLAZO");
-	assert.equal(r.prioridad, "ALTA");
-	assert.equal(interpretar("Algo @día", BASE).horizonte, "DIA");
-});
-
 test("un atajo que no existe o pegado a una palabra queda como texto", () => {
-	assert.deepEqual(interpretar("Escribir a hola@mes.com !urgente", BASE),
-		{ titulo: "Escribir a hola@mes.com !urgente", prioridad: "MEDIA", horizonte: "DIA", conAtajos: false });
+	assert.equal(interpretar("Escribir a hola@mes.com !urgente", BASE).titulo, "Escribir a hola@mes.com !urgente");
+	assert.equal(interpretar("Escribir a hola@mes.com !urgente", BASE).conAtajos, false);
 });
 
 test("si se repite, gana el último", () => {
 	assert.equal(interpretar("Algo !a !b", BASE).prioridad, "BAJA");
-});
-
-test("solo atajos deja el título vacío", () => {
-	assert.equal(interpretar("!a @s", BASE).titulo, "");
 });

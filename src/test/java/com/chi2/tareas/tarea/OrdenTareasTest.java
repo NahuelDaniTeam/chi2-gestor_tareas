@@ -39,7 +39,7 @@ class OrdenTareasTest {
 	}
 
 	static Tarea tarea(String titulo, Prioridad prioridad, String fecha, Instant creada) {
-		return new Tarea(titulo, null, Horizonte.LARGO_PLAZO, fecha == null ? null : LocalDate.parse(fecha),
+		return new Tarea(titulo, null, fecha == null ? Horizonte.SIN_PLAZO : Horizonte.LIMITE, fecha == null ? null : LocalDate.parse(fecha),
 				prioridad, USUARIO, creada);
 	}
 

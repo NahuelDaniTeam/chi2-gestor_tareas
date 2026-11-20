@@ -50,6 +50,10 @@
   .contenedor {
     @apply mx-auto max-w-5xl px-4 sm:px-8;
   }
+  /* Semana y Mes: más ancho para que entren 7 columnas */
+  .contenedor-ancho {
+    @apply max-w-7xl;
+  }
 
   /* Rótulo de sección: "— HOY", como en el web principal */
   .etiqueta {
@@ -102,6 +106,9 @@
   .pestana[aria-current="page"] {
     @apply bg-linea/70 font-medium text-tinta;
   }
+  .contador-suave {
+    @apply bg-linea text-tinta;
+  }
   .contador {
     @apply min-w-5 rounded-full bg-tinta px-1.5 text-center text-[0.6875rem] leading-[1.125rem] font-medium tabular-nums text-fondo;
   }
@@ -127,6 +134,12 @@
   .segmentado-ancho > label {
     @apply flex-1 py-1.5;
   }
+  .segmentado-chico > label {
+    @apply px-1 text-[0.8125rem];
+  }
+  .boton-mini {
+    @apply rounded-md border border-linea bg-superficie px-2 py-0.5 text-xs text-tenue transition hover:border-tinta/30 hover:text-tinta;
+  }
 
   .campo {
     @apply w-full rounded-lg border border-linea bg-superficie px-3 py-2 text-sm text-tinta transition outline-none focus:border-tinta/40 focus:ring-3 focus:ring-linea/70;
@@ -139,6 +152,9 @@
   }
   .chip {
     @apply relative inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-linea py-1 pr-2 pl-2 text-xs text-tenue transition hover:border-tinta/25 hover:text-tinta;
+  }
+  .chip input[type="date"] {
+    @apply cursor-pointer bg-transparent outline-none;
   }
   .chip select {
     @apply cursor-pointer appearance-none bg-transparent pr-0.5 outline-none;
@@ -218,6 +234,99 @@
     @apply shadow-[inset_2px_0_0_var(--color-acento),0_1px_2px_rgb(25_23_20/0.05)];
   }
   .tarjeta.arrastrando {
+    @apply opacity-40;
+  }
+
+  /* ---------- Calendario ---------- */
+
+  /* Lo que se puede soltar se marca al pasar por encima */
+  [data-soltar-plazo].destino {
+    @apply bg-acento/8 outline-2 -outline-offset-2 outline-acento/50 outline-dashed;
+  }
+
+  .franja {
+    @apply mb-3 flex min-h-11 flex-wrap items-center gap-1.5 rounded-xl border border-linea bg-superficie px-3 py-2 transition;
+  }
+  .semana-mes .franja {
+    @apply mb-0 min-h-0 rounded-none border-0 border-t border-linea bg-fondo/70 px-2 py-1;
+  }
+  /* Una semana sin tareas propias no ocupa lugar, salvo mientras se arrastra algo */
+  .franja-vacia {
+    @apply hidden;
+  }
+  .arrastrando-algo .franja-vacia {
+    @apply flex;
+  }
+  .franja-titulo {
+    @apply mr-1 text-xs font-medium whitespace-nowrap text-tenue;
+  }
+  .franja-ayuda {
+    @apply text-xs text-tenue/60;
+  }
+
+  .grilla-semana {
+    @apply grid grid-cols-7 overflow-hidden rounded-xl border border-linea bg-superficie;
+  }
+  .dia-semana {
+    @apply flex min-w-0 flex-col border-l border-linea first:border-l-0;
+  }
+  .dia-semana:has(.es-hoy) {
+    @apply bg-acento/3;
+  }
+  .dia-cabecera {
+    @apply flex items-baseline justify-between px-2.5 pt-2 pb-1.5 text-xs;
+  }
+  .numero-dia {
+    @apply inline-flex min-w-6 items-center justify-center rounded-full text-sm font-medium tabular-nums text-tinta;
+  }
+  .es-hoy .numero-dia {
+    @apply bg-acento px-1.5 text-superficie;
+  }
+  .zona-dia {
+    @apply flex min-h-64 flex-1 flex-col gap-1 p-1.5 transition;
+  }
+
+  .grilla-mes {
+    @apply overflow-hidden rounded-xl border border-linea bg-superficie;
+  }
+  .mes-cabecera {
+    @apply border-b border-linea px-2 py-1.5 text-xs text-tenue;
+  }
+  .celda-mes {
+    @apply flex min-h-28 min-w-0 flex-col gap-1 border-t border-l border-linea p-1.5 transition first:border-l-0;
+  }
+  .semana-mes:first-of-type .celda-mes {
+    @apply border-t-0;
+  }
+  .celda-mes .numero-dia {
+    @apply self-start px-1 text-xs hover:bg-linea/70;
+  }
+  .celda-mes.es-hoy .numero-dia {
+    @apply hover:bg-acento;
+  }
+  .fuera-de-mes {
+    @apply bg-fondo/60;
+  }
+  .fuera-de-mes .numero-dia {
+    @apply text-tenue/60;
+  }
+  .mas-tareas {
+    @apply px-1 text-xs text-tenue hover:text-tinta;
+  }
+
+  .pastilla {
+    @apply flex w-full min-w-0 cursor-grab items-center gap-1.5 rounded-md border border-linea bg-superficie px-1.5 py-1 text-left text-xs shadow-[0_1px_1px_rgb(25_23_20/0.04)] transition hover:border-tinta/30 active:cursor-grabbing;
+  }
+  .franja .pastilla {
+    @apply w-auto max-w-64;
+  }
+  .pastilla.finalizada {
+    @apply text-tenue line-through decoration-tenue/40;
+  }
+  .pastilla.vencida {
+    @apply border-acento/40;
+  }
+  .pastilla.arrastrando {
     @apply opacity-40;
   }
 

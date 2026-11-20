@@ -89,7 +89,7 @@ class TareaIntegracionTest {
 	}
 
 	@Test
-	void hoyMuestraLasDelDiaYTodasLasVencidasSinTerminarOrdenadasPorPrioridad() throws Exception {
+	void hoyMuestraLasDelDiaLasQueVencenYTodasLasVencidasOrdenadasPorPrioridad() throws Exception {
 		crear("Hoy media", "DIA", "2026-11-19", "MEDIA");
 		crear("Hoy alta", "DIA", "2026-11-19", "ALTA");
 		crear("Ayer sin terminar", "DIA", "2026-11-18", "BAJA");
@@ -98,43 +98,71 @@ class TareaIntegracionTest {
 		crear("Semana pasada sin terminar", "SEMANA", "2026-11-10", "MEDIA");
 		crear("Esta semana", "SEMANA", "2026-11-19", "ALTA");
 		crear("Este mes", "MES", "2026-11-19", "ALTA");
-		crear("Límite hoy", "LARGO_PLAZO", "2026-11-19", "BAJA");
-		crear("Sin fecha", "LARGO_PLAZO", null, "ALTA");
+		crear("Vence hoy", "LIMITE", "2026-11-19", "BAJA");
+		crear("Sin plazo", "SIN_PLAZO", null, "ALTA");
 		crear("Mañana", "DIA", "2026-11-20", "ALTA");
 
 		mvc.perform(get("/api/tareas/hoy"))
 				.andExpect(jsonPath("$[*].titulo", contains(
-						"Hoy alta", "Semana pasada sin terminar", "Hoy media", "Ayer sin terminar", "Límite hoy")))
+						"Hoy alta", "Semana pasada sin terminar", "Hoy media", "Ayer sin terminar", "Vence hoy")))
 				.andExpect(jsonPath("$[*].vencida", contains(false, true, false, true, false)));
 	}
 
 	@Test
-	void laSemanaSeBuscaConCualquierDiaYFiltraPorPrioridad() throws Exception {
-		crear("Baja", "SEMANA", "2026-11-17", "BAJA");
-		crear("Alta", "SEMANA", "2026-11-22", "ALTA");
+	void laSemanaIncluyeSusDiasYSuPlazoPeroNoElMes() throws Exception {
+		crear("Semana baja", "SEMANA", "2026-11-17", "BAJA");
+		crear("Martes", "DIA", "2026-11-17", "MEDIA");
+		crear("Vence el sábado", "LIMITE", "2026-11-21", "ALTA");
+		crear("Del mes", "MES", "2026-11-19", "ALTA");
 		crear("Otra semana", "SEMANA", "2026-11-23", "ALTA");
-		crear("Del día", "DIA", "2026-11-19", "ALTA");
+		crear("Sin plazo", "SIN_PLAZO", null, "ALTA");
 
-		mvc.perform(get("/api/tareas").param("horizonte", "SEMANA").param("fecha", "2026-11-19"))
-				.andExpect(jsonPath("$[*].titulo", contains("Alta", "Baja")))
-				.andExpect(jsonPath("$[0].fechaReferencia").value("2026-11-16"));
-
-		mvc.perform(get("/api/tareas").param("horizonte", "SEMANA").param("fecha", "2026-11-19")
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-16").param("hasta", "2026-11-22"))
+				.andExpect(jsonPath("$[*].titulo", contains("Vence el sábado", "Martes", "Semana baja")));
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-16").param("hasta", "2026-11-22")
 						.param("prioridad", "BAJA"))
-				.andExpect(jsonPath("$[*].titulo", contains("Baja")));
+				.andExpect(jsonPath("$[*].titulo", contains("Semana baja")));
 	}
 
 	@Test
-	void elMesYElLargoPlazo() throws Exception {
+	void elMesIncluyeSusDiasSusSemanasYElMes() throws Exception {
 		crear("Noviembre", "MES", "2026-11-28", "MEDIA");
 		crear("Diciembre", "MES", "2026-12-02", "MEDIA");
-		crear("Con límite", "LARGO_PLAZO", "2027-07-01", "MEDIA");
-		crear("Sin límite", "LARGO_PLAZO", null, "MEDIA");
+		crear("Día 25", "DIA", "2026-11-25", "MEDIA");
+		crear("Semana que cruza", "SEMANA", "2026-12-02", "MEDIA");
+		crear("Semana de octubre", "SEMANA", "2026-10-28", "MEDIA");
 
-		mvc.perform(get("/api/tareas").param("horizonte", "MES").param("fecha", "2026-11-01"))
-				.andExpect(jsonPath("$[*].titulo", contains("Noviembre")));
-		mvc.perform(get("/api/tareas").param("horizonte", "LARGO_PLAZO"))
-				.andExpect(jsonPath("$[*].titulo", contains("Con límite", "Sin límite")));
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-01").param("hasta", "2026-11-30"))
+				.andExpect(jsonPath("$[*].titulo", contains("Semana de octubre", "Noviembre", "Día 25", "Semana que cruza")));
+	}
+
+	@Test
+	void largoPlazoTraeTodoDesdeElMesQueVieneYPorPlanificarLasSinPlazo() throws Exception {
+		crear("Este mes", "MES", "2026-11-01", "MEDIA");
+		crear("Diciembre", "MES", "2026-12-01", "MEDIA");
+		crear("Vence en julio", "LIMITE", "2027-07-01", "MEDIA");
+		crear("Aprender guitarra", "SIN_PLAZO", "2027-01-01", "MEDIA");
+
+		mvc.perform(get("/api/tareas").param("desde", "2026-12-01"))
+				.andExpect(jsonPath("$[*].titulo", contains("Diciembre", "Vence en julio")));
+		mvc.perform(get("/api/tareas/sin-plazo"))
+				.andExpect(jsonPath("$[*].titulo", contains("Aprender guitarra")))
+				.andExpect(jsonPath("$[0].fechaReferencia").value(nullValue()));
+	}
+
+	@Test
+	void planificarUnaTareaSinPlazoYReprogramarla() throws Exception {
+		String id = crear("Leer paper", "SIN_PLAZO", null, "MEDIA");
+
+		mvc.perform(patch("/api/tareas/{id}/plazo", id).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"horizonte\": \"SEMANA\" }"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.horizonte").value("SEMANA"))
+				.andExpect(jsonPath("$.fechaReferencia").value("2026-11-16"));
+		mvc.perform(patch("/api/tareas/{id}/plazo", id).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"horizonte\": \"DIA\", \"fechaReferencia\": \"2026-11-24\" }"))
+				.andExpect(jsonPath("$.fechaReferencia").value("2026-11-24"));
+		mvc.perform(get("/api/tareas/sin-plazo")).andExpect(jsonPath("$.length()").value(0));
 	}
 
 	@Test
@@ -169,7 +197,7 @@ class TareaIntegracionTest {
 				.andExpect(jsonPath("$.fechaReferencia").value("2026-12-01"));
 
 		mvc.perform(put("/api/tareas/{id}", id).contentType(MediaType.APPLICATION_JSON).content("""
-						{ "titulo": "Leer paper de Kahneman", "horizonte": "LARGO_PLAZO" }
+						{ "titulo": "Leer paper de Kahneman", "horizonte": "SIN_PLAZO", "fechaReferencia": "2026-12-15" }
 						"""))
 				.andExpect(jsonPath("$.fechaReferencia").value(nullValue()))
 				.andExpect(jsonPath("$.descripcion").value(nullValue()));

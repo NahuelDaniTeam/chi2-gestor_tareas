@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.chi2.tareas.tarea.CambioEstadoRequest;
+import com.chi2.tareas.tarea.CambioPlazoRequest;
 import com.chi2.tareas.tarea.CambioPrioridadRequest;
 import com.chi2.tareas.tarea.EstadoTarea;
-import com.chi2.tareas.tarea.Horizonte;
 import com.chi2.tareas.tarea.Prioridad;
+import com.chi2.tareas.tarea.Rango;
 import com.chi2.tareas.tarea.TareaRequest;
 import com.chi2.tareas.tarea.TareaResponse;
 import com.chi2.tareas.tarea.TareaService;
@@ -43,20 +44,31 @@ public class TareaApiController {
 		this.service = service;
 	}
 
-	/** Tareas de un horizonte en el período de {@code fecha} (hoy si falta), ordenadas por prioridad. */
+	/**
+	 * Tareas planificadas dentro de un rango, ordenadas por prioridad: las de sus días, sus semanas y sus meses
+	 * (un mes no entra en el rango de una semana). Sin {@code hasta}, el rango no tiene fin.
+	 */
 	@GetMapping
-	public List<TareaResponse> listar(@RequestParam Horizonte horizonte,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+	public List<TareaResponse> listar(
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
 			@RequestParam(required = false) Prioridad prioridad,
 			@RequestParam(required = false) EstadoTarea estado) {
-		return service.listar(horizonte, fecha, prioridad, estado);
+		return service.listar(new Rango(desde, hasta), prioridad, estado);
 	}
 
-	/** Vista Hoy: las del día más las vencidas sin terminar. */
+	/** Vista Hoy: las del día y las que vencen hoy, más las vencidas sin terminar. */
 	@GetMapping("/hoy")
 	public List<TareaResponse> hoy(@RequestParam(required = false) Prioridad prioridad,
 			@RequestParam(required = false) EstadoTarea estado) {
 		return service.hoy(prioridad, estado);
+	}
+
+	/** Por planificar: tareas sin plazo. */
+	@GetMapping("/sin-plazo")
+	public List<TareaResponse> sinPlazo(@RequestParam(required = false) Prioridad prioridad,
+			@RequestParam(required = false) EstadoTarea estado) {
+		return service.sinPlazo(prioridad, estado);
 	}
 
 	@GetMapping("/{id}")
@@ -73,6 +85,11 @@ public class TareaApiController {
 	@PutMapping("/{id}")
 	public TareaResponse editar(@PathVariable UUID id, @Valid @RequestBody TareaRequest tarea) {
 		return service.editar(id, tarea);
+	}
+
+	@PatchMapping("/{id}/plazo")
+	public TareaResponse cambiarPlazo(@PathVariable UUID id, @Valid @RequestBody CambioPlazoRequest cambio) {
+		return service.cambiarPlazo(id, cambio.horizonte(), cambio.fechaReferencia());
 	}
 
 	@PatchMapping("/{id}/estado")

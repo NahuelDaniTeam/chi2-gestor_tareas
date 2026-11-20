@@ -10,6 +10,7 @@ import com.chi2.tareas.tarea.Ambito;
 import com.chi2.tareas.tarea.EstadoTarea;
 import com.chi2.tareas.tarea.Horizonte;
 import com.chi2.tareas.tarea.Prioridad;
+import com.chi2.tareas.tarea.Rango;
 import com.chi2.tareas.tarea.TareaNoEncontradaException;
 import com.chi2.tareas.tarea.TareaRequest;
 import com.chi2.tareas.tarea.TareaResponse;
@@ -52,11 +53,11 @@ class TareaApiControllerTest {
 	TareaService service;
 
 	@Test
-	void listaPorHorizonteYFecha() throws Exception {
-		when(service.listar(Horizonte.SEMANA, LocalDate.parse("2026-11-19"), Prioridad.ALTA, null))
-				.thenReturn(List.of(respuesta(EstadoTarea.PENDIENTE)));
+	void listaPorRango() throws Exception {
+		Rango semana = new Rango(LocalDate.parse("2026-11-16"), LocalDate.parse("2026-11-22"));
+		when(service.listar(semana, Prioridad.ALTA, null)).thenReturn(List.of(respuesta(EstadoTarea.PENDIENTE)));
 
-		mvc.perform(get("/api/tareas").param("horizonte", "SEMANA").param("fecha", "2026-11-19")
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-16").param("hasta", "2026-11-22")
 						.param("prioridad", "ALTA"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].id").value(ID.toString()))
@@ -65,14 +66,40 @@ class TareaApiControllerTest {
 	}
 
 	@Test
-	void sinHorizonteOConUnoQueNoExisteResponde400() throws Exception {
+	void unRangoSinFinEsLargoPlazo() throws Exception {
+		mvc.perform(get("/api/tareas").param("desde", "2026-12-01")).andExpect(status().isOk());
+
+		verify(service).listar(Rango.desde(LocalDate.parse("2026-12-01")), null, null);
+	}
+
+	@Test
+	void sinDesdeOConUnRangoAlReves400() throws Exception {
 		mvc.perform(get("/api/tareas"))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.detail").value("Falta o no es válido el parámetro 'horizonte'."));
-		mvc.perform(get("/api/tareas").param("horizonte", "ANIO"))
+				.andExpect(jsonPath("$.detail").value("Falta o no es válido el parámetro 'desde'."));
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-20").param("hasta", "2026-11-19"))
 				.andExpect(status().isBadRequest());
 
 		verifyNoInteractions(service);
+	}
+
+	@Test
+	void sinPlazoDevuelveLasPorPlanificar() throws Exception {
+		when(service.sinPlazo(null, null)).thenReturn(List.of());
+
+		mvc.perform(get("/api/tareas/sin-plazo")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void planificarConPatch() throws Exception {
+		when(service.cambiarPlazo(ID, Horizonte.DIA, LocalDate.parse("2026-11-24"))).thenReturn(respuesta(EstadoTarea.PENDIENTE));
+
+		mvc.perform(patch("/api/tareas/{id}/plazo", ID).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"horizonte\": \"DIA\", \"fechaReferencia\": \"2026-11-24\" }"))
+				.andExpect(status().isOk());
+		mvc.perform(patch("/api/tareas/{id}/plazo", ID).contentType(MediaType.APPLICATION_JSON).content("{}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.errores.horizonte").exists());
 	}
 
 	@Test

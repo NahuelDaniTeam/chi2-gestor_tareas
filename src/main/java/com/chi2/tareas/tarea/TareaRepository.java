@@ -1,7 +1,6 @@
 package com.chi2.tareas.tarea;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,8 +13,12 @@ public interface TareaRepository extends JpaRepository<Tarea, UUID> {
 
 	List<Tarea> findByUsuarioIdAndAmbitoAndHorizonte(UUID usuarioId, Ambito ambito, Horizonte horizonte);
 
-	List<Tarea> findByUsuarioIdAndAmbitoAndHorizonteInAndFechaReferencia(UUID usuarioId, Ambito ambito,
-			Collection<Horizonte> horizontes, LocalDate fechaReferencia);
+	/** Candidatas para un rango: el filtro fino lo hace {@link Rango#incluye}. */
+	List<Tarea> findByUsuarioIdAndAmbitoAndFechaReferenciaBetween(UUID usuarioId, Ambito ambito, LocalDate desde,
+			LocalDate hasta);
+
+	List<Tarea> findByUsuarioIdAndAmbitoAndFechaReferenciaGreaterThanEqual(UUID usuarioId, Ambito ambito,
+			LocalDate desde);
 
 	/** Candidatas a vencidas: sin terminar y con fecha de referencia anterior a {@code fecha}. */
 	List<Tarea> findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(UUID usuarioId, Ambito ambito,

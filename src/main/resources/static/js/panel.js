@@ -8,17 +8,18 @@ import { atraparFoco, avisar, icono } from "./dom.js";
 import { momento } from "./formato.js";
 
 const ETIQUETA_FECHA = {
-	DIA: "Fecha",
+	DIA: "Día",
 	SEMANA: "Semana",
 	MES: "Mes",
-	LARGO_PLAZO: "Fecha límite"
+	LIMITE: "Vence el"
 };
 
 const AYUDA_FECHA = {
+	SIN_PLAZO: "Queda en Por planificar hasta que le pongas un plazo.",
 	DIA: "",
 	SEMANA: "Cualquier día: se guarda la semana que lo contiene.",
 	MES: "Cualquier día: se guarda el mes que lo contiene.",
-	LARGO_PLAZO: "Opcional."
+	LIMITE: "Se muestra en ese día y en Hoy cuando vence."
 };
 
 /**
@@ -75,9 +76,11 @@ export function iniciarPanel(contexto, alCerrar) {
 
 	function ajustarFecha() {
 		const horizonte = campo("horizonte").value;
-		document.getElementById("p-fecha-label").textContent = ETIQUETA_FECHA[horizonte];
+		const sinPlazo = horizonte === "SIN_PLAZO";
+		document.getElementById("p-fecha-bloque").hidden = sinPlazo;
+		document.getElementById("p-fecha-label").textContent = ETIQUETA_FECHA[horizonte] ?? "Fecha";
 		document.getElementById("p-fecha-ayuda").textContent = AYUDA_FECHA[horizonte];
-		campo("fechaReferencia").required = horizonte !== "LARGO_PLAZO";
+		if (!sinPlazo && !campo("fechaReferencia").value) campo("fechaReferencia").value = tarea?.fechaReferencia || contexto.hoy;
 	}
 
 	function mostrarMeta() {
@@ -101,7 +104,7 @@ export function iniciarPanel(contexto, alCerrar) {
 	function cuerpoEdicion() {
 		const horizonte = campo("horizonte").value;
 		let fecha = campo("fechaReferencia").value || null;
-		if (!fecha && horizonte !== "LARGO_PLAZO") fecha = tarea.fechaReferencia || contexto.hoy;
+		if (!fecha && horizonte !== "SIN_PLAZO") fecha = tarea.fechaReferencia || contexto.hoy;
 		return {
 			titulo: campo("titulo").value,
 			descripcion: campo("descripcion").value,
@@ -120,11 +123,14 @@ export function iniciarPanel(contexto, alCerrar) {
 		}
 		indicar("Guardando…");
 		try {
+			const cuerpo = cuerpoEdicion();
 			const actualizada = cambiado === "estado"
 				? await api.cambiarEstado(t.id, campo("estado").value)
 				: cambiado === "prioridad"
-					? await api.cambiarPrioridad(t.id, campo("prioridad").value)
-					: await api.editar(t.id, cuerpoEdicion());
+					? await api.cambiarPrioridad(t.id, cuerpo.prioridad)
+					: cambiado === "horizonte" || cambiado === "fechaReferencia"
+						? await api.cambiarPlazo(t.id, cuerpo.horizonte, cuerpo.fechaReferencia)
+						: await api.editar(t.id, cuerpo);
 			Object.assign(t, actualizada);
 			if (tarea === t) {
 				campo("fechaReferencia").value = t.fechaReferencia || "";

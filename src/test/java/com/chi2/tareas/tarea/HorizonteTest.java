@@ -21,16 +21,17 @@ class HorizonteTest {
 			"SEMANA,      2027-01-01, 2026-12-28",   // cruza de año
 			"MES,         2026-11-19, 2026-11-01",
 			"MES,         2026-02-28, 2026-02-01",
-			"LARGO_PLAZO, 2027-03-15, 2027-03-15"
+			"LIMITE,      2027-03-15, 2027-03-15"
 	})
 	void laFechaDeReferenciaDependeDelHorizonte(Horizonte horizonte, LocalDate fecha, LocalDate esperada) {
 		assertThat(horizonte.fechaReferencia(fecha)).isEqualTo(esperada);
 	}
 
 	@Test
-	void largoPlazoPuedeNoTenerFecha() {
-		assertThat(Horizonte.LARGO_PLAZO.fechaReferencia(null)).isNull();
-		assertThat(Horizonte.LARGO_PLAZO.exigeFecha()).isFalse();
+	void sinPlazoNoTieneFechaAunqueVenga() {
+		assertThat(Horizonte.SIN_PLAZO.fechaReferencia(LocalDate.parse("2026-11-19"))).isNull();
+		assertThat(Horizonte.SIN_PLAZO.exigeFecha()).isFalse();
+		assertThat(Horizonte.LIMITE.exigeFecha()).isTrue();
 		assertThat(Horizonte.DIA.exigeFecha()).isTrue();
 	}
 

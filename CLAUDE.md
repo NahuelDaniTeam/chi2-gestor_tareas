@@ -21,8 +21,8 @@ Módulo de CHI2 para planificar tareas personales por día, semana, mes y largo 
 
 ## 2. Qué hace (resumen de `docs/01-especificacion.md`)
 
-- **Tareas** con título, descripción, horizonte (`DIA`, `SEMANA`, `MES`, `LARGO_PLAZO`), fecha de referencia, prioridad (`ALTA`, `MEDIA`, `BAJA`) y estado (`PENDIENTE`, `EN_CURSO`, `FINALIZADA`).
-- **Vistas:** Hoy (pantalla inicial, con las vencidas), Semana, Mes y Largo plazo, cada una como lista o tablero.
+- **Tareas** con título, descripción, plazo anidado (`SIN_PLAZO`, `DIA`, `SEMANA`, `MES`, `LIMITE`; campo `horizonte`), fecha de referencia, prioridad (`ALTA`, `MEDIA`, `BAJA`) y estado (`PENDIENTE`, `EN_CURSO`, `FINALIZADA`).
+- **Vistas:** Hoy (pantalla inicial, con las vencidas), Semana y Mes (calendario, lista o tablero), Largo plazo y Por planificar. Cada vista incluye lo que cae dentro de ella (`Rango`).
 - **Alta rápida** con foco al abrir, Enter para guardar y atajos `!a` `@s`.
 - **Tablero** con arrastre entre columnas y **panel lateral** de edición; todo se guarda al instante.
 

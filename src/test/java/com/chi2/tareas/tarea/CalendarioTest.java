@@ -27,19 +27,21 @@ class CalendarioTest {
 	}
 
 	@Test
-	void laVistaHoyNoTieneNavegacion() {
-		Periodo hoy = calendario.periodoHoy();
+	void hoyEsUnSoloDiaSinNavegacion() {
+		Periodo hoy = calendario.hoyComoPeriodo();
 
 		assertThat(hoy.titulo()).isEqualTo("Jueves 19 de noviembre");
 		assertThat(hoy.tieneNavegacion()).isFalse();
+		assertThat(hoy.rango()).isEqualTo(Rango.dia(LocalDate.parse("2026-11-19")));
 	}
 
 	@Test
 	void laSemanaVaDeLunesADomingoYNavegaDeASiete() {
-		Periodo semana = calendario.periodo(Horizonte.SEMANA, LocalDate.parse("2026-11-19"));
+		Periodo semana = calendario.semana(LocalDate.parse("2026-11-19"));
 
 		assertThat(semana.fecha()).isEqualTo("2026-11-16");
 		assertThat(semana.titulo()).isEqualTo("Del 16 al 22 de noviembre");
+		assertThat(semana.rango()).isEqualTo(new Rango(LocalDate.parse("2026-11-16"), LocalDate.parse("2026-11-22")));
 		assertThat(semana.anterior()).isEqualTo("2026-11-09");
 		assertThat(semana.siguiente()).isEqualTo("2026-11-23");
 	}
@@ -52,19 +54,25 @@ class CalendarioTest {
 
 	@Test
 	void elMesNavegaPorMes() {
-		Periodo mes = calendario.periodo(Horizonte.MES, LocalDate.parse("2026-01-19"));
+		Periodo mes = calendario.mes(LocalDate.parse("2026-01-19"));
 
 		assertThat(mes.titulo()).isEqualTo("Enero 2026");
+		assertThat(mes.rango().hasta()).isEqualTo("2026-01-31");
 		assertThat(mes.anterior()).isEqualTo("2025-12-01");
 		assertThat(mes.siguiente()).isEqualTo("2026-02-01");
 	}
 
 	@Test
-	void largoPlazoNoTieneFecha() {
-		Periodo largo = calendario.periodo(Horizonte.LARGO_PLAZO, null);
+	void elLargoPlazoEmpiezaElMesQueVieneYNoTermina() {
+		Periodo largo = calendario.largoPlazo();
 
-		assertThat(largo.fecha()).isNull();
+		assertThat(largo.rango()).isEqualTo(Rango.desde(LocalDate.parse("2026-12-01")));
 		assertThat(largo.tieneNavegacion()).isFalse();
+	}
+
+	@Test
+	void porPlanificarNoTieneFechas() {
+		assertThat(calendario.porPlanificar().rango()).isNull();
 	}
 
 }

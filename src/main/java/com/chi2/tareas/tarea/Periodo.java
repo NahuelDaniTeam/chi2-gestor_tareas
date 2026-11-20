@@ -3,10 +3,13 @@ package com.chi2.tareas.tarea;
 import java.time.LocalDate;
 
 /**
- * Lo que muestra una vista de planificación: su horizonte, desde qué fecha, un título legible
- * y los períodos vecinos para navegar. En largo plazo las fechas son {@code null}.
+ * Lo que muestra una vista: desde qué fecha, un título legible, los períodos vecinos para navegar
+ * y el rango de fechas que abarca.
+ *
+ * @param fecha fecha de referencia de la vista (la que toma el alta rápida); {@code null} en Por planificar
+ * @param rango {@code null} en Por planificar, que no tiene fechas
  */
-public record Periodo(Horizonte horizonte, LocalDate fecha, String titulo, LocalDate anterior, LocalDate siguiente) {
+public record Periodo(LocalDate fecha, String titulo, LocalDate anterior, LocalDate siguiente, Rango rango) {
 
 	public boolean tieneNavegacion() {
 		return anterior != null;

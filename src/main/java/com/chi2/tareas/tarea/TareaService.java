@@ -35,29 +35,36 @@ public class TareaService {
 	}
 
 	/**
-	 * Tareas de un horizonte en el período que contiene a {@code fecha} (hoy si falta).
-	 * En largo plazo, todas. {@code prioridad} y {@code estado} filtran si vienen.
+	 * Tareas planificadas dentro de un rango (§4.3): las de sus días, sus semanas y sus meses,
+	 * según {@link Rango#incluye}. {@code prioridad} y {@code estado} filtran si vienen.
 	 */
-	public List<TareaResponse> listar(Horizonte horizonte, LocalDate fecha, Prioridad prioridad, EstadoTarea estado) {
-		List<Tarea> tareas = horizonte == Horizonte.LARGO_PLAZO
-				? repository.findByUsuarioIdAndAmbitoAndHorizonte(usuario.id(), Ambito.PERSONAL, horizonte)
-				: repository.findByUsuarioIdAndAmbitoAndHorizonteInAndFechaReferencia(usuario.id(), Ambito.PERSONAL,
-						List.of(horizonte), horizonte.fechaReferencia(fechaOHoy(fecha)));
-		return responder(tareas.stream(), prioridad, estado);
+	public List<TareaResponse> listar(Rango rango, Prioridad prioridad, EstadoTarea estado) {
+		List<Tarea> candidatas = rango.hasta() == null
+				? repository.findByUsuarioIdAndAmbitoAndFechaReferenciaGreaterThanEqual(usuario.id(), Ambito.PERSONAL,
+						rango.buscarDesde())
+				: repository.findByUsuarioIdAndAmbitoAndFechaReferenciaBetween(usuario.id(), Ambito.PERSONAL,
+						rango.buscarDesde(), rango.hasta());
+		return responder(candidatas.stream().filter(rango::incluye), prioridad, estado);
+	}
+
+	/** Tareas creadas que todavía no tienen plazo ("Por planificar"). */
+	public List<TareaResponse> sinPlazo(Prioridad prioridad, EstadoTarea estado) {
+		return responder(repository.findByUsuarioIdAndAmbitoAndHorizonte(usuario.id(), Ambito.PERSONAL,
+				Horizonte.SIN_PLAZO).stream(), prioridad, estado);
 	}
 
 	/**
-	 * Vista Hoy (§4.3): las tareas del día (y las de largo plazo que vencen hoy) más todas las vencidas
-	 * sin terminar, de cualquier horizonte.
+	 * Vista Hoy (§4.3): las del día y las que vencen hoy, más todas las vencidas sin terminar,
+	 * de cualquier plazo.
 	 */
 	public List<TareaResponse> hoy(Prioridad prioridad, EstadoTarea estado) {
 		LocalDate hoy = calendario.hoy();
-		UUID id = usuario.id();
-		Stream<Tarea> deHoy = repository.findByUsuarioIdAndAmbitoAndHorizonteInAndFechaReferencia(id,
-				Ambito.PERSONAL, List.of(Horizonte.DIA, Horizonte.LARGO_PLAZO), hoy).stream();
-		Stream<Tarea> vencidas = repository.findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(id,
+		Rango deHoy = Rango.dia(hoy);
+		Stream<Tarea> delDia = repository.findByUsuarioIdAndAmbitoAndFechaReferenciaBetween(usuario.id(),
+				Ambito.PERSONAL, hoy, hoy).stream().filter(deHoy::incluye);
+		Stream<Tarea> vencidas = repository.findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(usuario.id(),
 				Ambito.PERSONAL, EstadoTarea.FINALIZADA, hoy).stream().filter(t -> t.estaVencida(hoy));
-		return responder(Stream.concat(deHoy, vencidas), prioridad, estado);
+		return responder(Stream.concat(delDia, vencidas), prioridad, estado);
 	}
 
 	public TareaResponse obtener(UUID id) {
@@ -66,14 +73,23 @@ public class TareaService {
 
 	@Transactional
 	public TareaResponse crear(TareaRequest request) {
-		Tarea tarea = mapper.aEntidad(request, fechaSegun(request), usuario.id(), clock.instant());
+		Tarea tarea = mapper.aEntidad(request, fechaSegun(request.horizonte(), request.fechaReferencia()),
+				usuario.id(), clock.instant());
 		return mapper.aResponse(repository.save(tarea), calendario.hoy());
 	}
 
 	@Transactional
 	public TareaResponse editar(UUID id, TareaRequest request) {
 		Tarea tarea = buscar(id);
-		mapper.aplicar(request, fechaSegun(request), tarea, clock.instant());
+		mapper.aplicar(request, fechaSegun(request.horizonte(), request.fechaReferencia()), tarea, clock.instant());
+		return mapper.aResponse(tarea, calendario.hoy());
+	}
+
+	/** Planificar o reprogramar: lo usan el arrastre entre días, la bandeja y la revisión semanal. */
+	@Transactional
+	public TareaResponse cambiarPlazo(UUID id, Horizonte horizonte, LocalDate fecha) {
+		Tarea tarea = buscar(id);
+		tarea.cambiarPlazo(horizonte, fechaSegun(horizonte, fecha), clock.instant());
 		return mapper.aResponse(tarea, calendario.hoy());
 	}
 
@@ -101,12 +117,11 @@ public class TareaService {
 				.orElseThrow(() -> new TareaNoEncontradaException(id));
 	}
 
-	/** Día, semana y mes siempre tienen fecha (hoy si no vino); largo plazo, solo si se puso una límite. */
-	private LocalDate fechaSegun(TareaRequest request) {
-		return request.horizonte().exigeFecha() ? fechaOHoy(request.fechaReferencia()) : request.fechaReferencia();
-	}
-
-	private LocalDate fechaOHoy(LocalDate fecha) {
+	/** Con plazo, siempre hay fecha (hoy si no vino); sin plazo, nunca. */
+	private LocalDate fechaSegun(Horizonte horizonte, LocalDate fecha) {
+		if (!horizonte.exigeFecha()) {
+			return null;
+		}
 		return fecha != null ? fecha : calendario.hoy();
 	}
 

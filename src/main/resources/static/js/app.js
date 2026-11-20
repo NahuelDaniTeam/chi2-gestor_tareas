@@ -13,24 +13,36 @@ import { dibujar, habilitarArrastre } from "./render.js";
 const raiz = document.getElementById("app");
 const contexto = Object.freeze({
 	vista: raiz.dataset.vista,
-	horizonteVista: raiz.dataset.horizonte,
 	fechaVista: raiz.dataset.fechaVista || null,
-	fechaAlta: raiz.dataset.fechaVista || null,
 	hoy: raiz.dataset.hoy,
-	urlLista: raiz.dataset.urlLista
+	urlLista: raiz.dataset.urlLista,
+	conCalendario: raiz.dataset.conCalendario === "true"
 });
 const TITULO = document.title;
 
+// Semana y Mes recuerdan su modo aparte: ahí el calendario es lo natural.
+const CLAVE_MODO = contexto.conCalendario ? "chi2-tareas-modo-calendario" : "chi2-tareas-modo";
+const MODOS = contexto.conCalendario ? ["calendario", "lista", "tablero"] : ["lista", "tablero"];
+const pantallaChica = window.matchMedia("(max-width: 767px)").matches;
+
 const estado = {
 	tareas: [],
-	modo: leerPreferencia("chi2-tareas-modo", "lista") === "tablero" ? "tablero" : "lista",
+	modo: modoInicial(),
 	cargando: true,
 	error: false
 };
 
+function modoInicial() {
+	const guardado = leerPreferencia(CLAVE_MODO, MODOS[0]);
+	const modo = MODOS.includes(guardado) ? guardado : MODOS[0];
+	// En el celular la grilla no entra: se arranca en lista.
+	return modo === "calendario" && pantallaChica ? "lista" : modo;
+}
+
 const acciones = {
 	abrir: tarea => panel.abrir(tarea),
-	cambiarEstado
+	cambiarEstado,
+	mover
 };
 
 function render() {
@@ -47,21 +59,31 @@ async function cargar() {
 	}
 	estado.cargando = false;
 	render();
-	actualizarContadorHoy();
+	actualizarContadores();
 }
 
-/** Pendientes de hoy (con vencidas) en la pestaña "Hoy" y en el título de la ventana. */
-async function actualizarContadorHoy() {
+/** Pendientes de hoy y tareas por planificar, en la navegación; los de hoy también en el título. */
+async function actualizarContadores() {
 	try {
-		const deHoy = contexto.vista === "HOY" ? estado.tareas : await api.listar("/api/tareas/hoy");
-		const pendientes = deHoy.filter(t => t.estado !== "FINALIZADA").length;
-		const contador = document.querySelector("[data-contador-hoy]");
-		contador.textContent = pendientes;
-		contador.hidden = pendientes === 0;
-		document.title = (pendientes ? `(${pendientes}) ` : "") + TITULO;
+		const [deHoy, sinPlazo] = await Promise.all([
+			contexto.vista === "HOY" ? estado.tareas : api.listar("/api/tareas/hoy"),
+			contexto.vista === "POR_PLANIFICAR" ? estado.tareas : api.listar("/api/tareas/sin-plazo")
+		]);
+		const abiertas = lista => lista.filter(t => t.estado !== "FINALIZADA").length;
+		mostrarContador("[data-contador-hoy]", abiertas(deHoy));
+		mostrarContador("[data-contador-sin-plazo]", abiertas(sinPlazo));
+		const pendientesHoy = abiertas(deHoy);
+		document.title = (pendientesHoy ? `(${pendientesHoy}) ` : "") + TITULO;
 	} catch {
-		// el contador es accesorio: si falla, la vista ya muestra el problema
+		// los contadores son accesorios: si fallan, la vista ya muestra el problema
 	}
+}
+
+function mostrarContador(selector, cantidad) {
+	const contador = document.querySelector(selector);
+	if (!contador) return;
+	contador.textContent = cantidad;
+	contador.hidden = cantidad === 0;
 }
 
 async function cambiarEstado(tarea, nuevo) {
@@ -72,7 +94,7 @@ async function cambiarEstado(tarea, nuevo) {
 	try {
 		Object.assign(tarea, await api.cambiarEstado(tarea.id, nuevo));
 		render();
-		actualizarContadorHoy();
+		actualizarContadores();
 	} catch (e) {
 		tarea.estado = anterior;
 		render();
@@ -80,9 +102,25 @@ async function cambiarEstado(tarea, nuevo) {
 	}
 }
 
+/** Planificar o reprogramar (arrastre en el calendario, botones de Por planificar). */
+async function mover(tarea, horizonte, fecha) {
+	const anterior = { horizonte: tarea.horizonte, fechaReferencia: tarea.fechaReferencia };
+	Object.assign(tarea, { horizonte, fechaReferencia: horizonte === "SIN_PLAZO" ? null : fecha });
+	render();
+	try {
+		await api.cambiarPlazo(tarea.id, horizonte, fecha);
+		await cargar();
+	} catch (e) {
+		Object.assign(tarea, anterior);
+		render();
+		avisar(e.primerMensaje ?? e.message, { error: true });
+	}
+}
+
 function cambiarModo(modo) {
+	if (!MODOS.includes(modo)) return;
 	estado.modo = modo;
-	guardarPreferencia("chi2-tareas-modo", modo);
+	guardarPreferencia(CLAVE_MODO, modo);
 	render();
 }
 
@@ -91,7 +129,7 @@ const alta = iniciarAlta(contexto, async nueva => {
 	await cargar();
 	return estado.tareas.some(t => t.id === nueva.id);
 });
-habilitarArrastre(id => estado.tareas.find(t => t.id === id), cambiarEstado);
+habilitarArrastre(id => estado.tareas.find(t => t.id === id), { cambiarEstado, mover });
 
 document.querySelectorAll("[data-modo]").forEach(b => b.addEventListener("click", () => cambiarModo(b.dataset.modo)));
 document.getElementById("reintentar").addEventListener("click", () => {
@@ -109,14 +147,15 @@ ayuda.addEventListener("click", e => { if (e.target === ayuda) ayuda.close(); })
 const ATAJOS_GLOBALES = {
 	n: () => alta.enfocar(),
 	"/": () => alta.enfocar(),
-	t: () => cambiarModo(estado.modo === "lista" ? "tablero" : "lista"),
+	t: () => cambiarModo(MODOS[(MODOS.indexOf(estado.modo) + 1) % MODOS.length]),
 	"?": () => ayuda.showModal(),
 	ArrowLeft: () => irA("[data-periodo='anterior']"),
 	ArrowRight: () => irA("[data-periodo='siguiente']"),
 	1: () => irA("[data-vista='HOY']"),
 	2: () => irA("[data-vista='SEMANA']"),
 	3: () => irA("[data-vista='MES']"),
-	4: () => irA("[data-vista='LARGO_PLAZO']")
+	4: () => irA("[data-vista='LARGO_PLAZO']"),
+	5: () => irA("[data-vista='POR_PLANIFICAR']")
 };
 
 function irA(selector) {

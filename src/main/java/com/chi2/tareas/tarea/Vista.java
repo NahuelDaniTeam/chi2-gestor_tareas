@@ -2,30 +2,39 @@ package com.chi2.tareas.tarea;
 
 import java.time.LocalDate;
 
-/** Vistas de planificación (§4.3), con su ruta en la web y el horizonte que muestran. */
+/**
+ * Vistas de planificación (§4.3), en el orden de la navegación. Cada una sabe su ruta, con qué plazo
+ * guarda el alta rápida y de qué endpoint trae las tareas.
+ */
 public enum Vista {
 
-	HOY("Hoy", "/", Horizonte.DIA),
-	SEMANA("Semana", "/semana", Horizonte.SEMANA),
-	MES("Mes", "/mes", Horizonte.MES),
-	LARGO_PLAZO("Largo plazo", "/largo-plazo", Horizonte.LARGO_PLAZO);
+	HOY("Hoy", "/", Horizonte.DIA, false),
+	SEMANA("Semana", "/semana", Horizonte.SEMANA, true),
+	MES("Mes", "/mes", Horizonte.MES, true),
+	LARGO_PLAZO("Largo plazo", "/largo-plazo", Horizonte.SIN_PLAZO, false),
+	POR_PLANIFICAR("Por planificar", "/por-planificar", Horizonte.SIN_PLAZO, false);
 
 	private final String etiqueta;
 	private final String ruta;
-	private final Horizonte horizonte;
+	private final Horizonte plazoAlta;
+	private final boolean conCalendario;
 
-	Vista(String etiqueta, String ruta, Horizonte horizonte) {
+	Vista(String etiqueta, String ruta, Horizonte plazoAlta, boolean conCalendario) {
 		this.etiqueta = etiqueta;
 		this.ruta = ruta;
-		this.horizonte = horizonte;
+		this.plazoAlta = plazoAlta;
+		this.conCalendario = conCalendario;
 	}
 
-	/** Endpoint de la API que trae las tareas de esta vista para el período elegido. */
+	/** Endpoint de la API con las tareas de esta vista para el período elegido. */
 	public String urlLista(Periodo periodo) {
 		return switch (this) {
 			case HOY -> "/api/tareas/hoy";
-			case LARGO_PLAZO -> "/api/tareas?horizonte=LARGO_PLAZO";
-			case SEMANA, MES -> "/api/tareas?horizonte=" + horizonte + "&fecha=" + periodo.fecha();
+			case POR_PLANIFICAR -> "/api/tareas/sin-plazo";
+			default -> {
+				Rango rango = periodo.rango();
+				yield "/api/tareas?desde=" + rango.desde() + (rango.hasta() == null ? "" : "&hasta=" + rango.hasta());
+			}
 		};
 	}
 
@@ -42,8 +51,12 @@ public enum Vista {
 		return ruta;
 	}
 
-	public Horizonte getHorizonte() {
-		return horizonte;
+	public Horizonte getPlazoAlta() {
+		return plazoAlta;
+	}
+
+	public boolean isConCalendario() {
+		return conCalendario;
 	}
 
 }

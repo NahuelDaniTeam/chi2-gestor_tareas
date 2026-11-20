@@ -32,53 +32,59 @@ Que el uso diario sea simple: abrir la aplicación, ver qué hay para hoy, carga
 
 ## 4. Funcionalidad del MVP (etapa 1)
 
-### 4.1 Tareas
+### 4.1 Tareas y plazos
 
 - **Título** (obligatorio, hasta 200 caracteres), **descripción** (opcional, hasta 2000).
-- **Horizonte:** `DIA`, `SEMANA`, `MES` o `LARGO_PLAZO`.
-- **Fecha de referencia:** según horizonte. Día: la fecha. Semana: el primer día de la semana (lunes). Mes: el primer día del mes. Largo plazo: sin fecha obligatoria, con fecha límite opcional. Se puede mandar cualquier día del período: el sistema la lleva a la fecha de referencia.
+- **Plazo** (campo `horizonte`), que se anida como un calendario: un día está dentro de una semana, una semana dentro de un mes y los meses forman el largo plazo.
+  - `SIN_PLAZO`: creada, falta planificarla. Vive en **Por planificar**.
+  - `DIA`: "lo hago ese día".
+  - `SEMANA` y `MES`: "en algún momento de esa semana o ese mes".
+  - `LIMITE`: tiempo máximo, "tiene que estar antes del 15". Ocupa el día del vencimiento y se rotula "Vence…".
+- **Fecha de referencia:** el día, el lunes de la semana o el primero del mes; sin plazo, ninguna. Se puede mandar cualquier día del período y el sistema la lleva a la referencia.
 - **Prioridad:** `ALTA`, `MEDIA` o `BAJA`. Por defecto, `MEDIA`.
 - **Estado:** `PENDIENTE`, `EN_CURSO`, `FINALIZADA`.
 - Registro de creación, última modificación y fecha de finalización.
-- Una tarea está **vencida** si no está finalizada y su período (o su fecha límite) ya terminó.
+- Una tarea está **vencida** si no está finalizada y su período (o su fecha límite) ya terminó. Sin plazo nunca vence.
 
 ### 4.2 Alta rápida
 
-- Un campo de texto, con foco al abrir la aplicación.
-- Enter guarda la tarea con los valores por defecto: horizonte de la vista activa (en Hoy, `DIA` con la fecha de hoy) y prioridad `MEDIA`.
-- Atajos para cambiar horizonte y prioridad sin el mouse, escritos en el mismo texto (propuesta, `PENDIENTES.md` 2):
+- Un campo de texto, con foco al abrir la aplicación. Enter guarda; el campo queda vacío y enfocado.
+- Por defecto, la tarea toma el plazo de la vista: en Hoy, el día de hoy; en Semana o Mes, ese período; en Largo plazo y Por planificar, sin plazo. Prioridad `MEDIA`.
+- Debajo del campo, tres chips muestran con qué se va a guardar (plazo, fecha y prioridad) y se pueden cambiar. Cuando un atajo cambia uno, se marca en terracota.
+- Atajos en el mismo texto (propuesta, `PENDIENTES.md` 2):
   - prioridad: `!a` (alta), `!m` (media), `!b` (baja);
-  - horizonte: `@d` (día), `@s` (semana), `@m` (mes), `@l` (largo plazo).
-  - Ejemplo: `Entregar capítulo 2 !a @s` guarda "Entregar capítulo 2", prioridad alta, en esta semana.
-  - También se pueden elegir con los dos selectores debajo del campo.
-- Después de guardar, el campo queda vacío y enfocado.
-- El botón "Agregar" y los selectores muestran con qué valores se va a guardar; cuando un atajo cambia uno, se marca en terracota.
-- Fuera del campo, `n` o `/` vuelven a enfocarlo.
+  - día: `@hoy`, `@mañana`, `@pasado`, `@lunes` … `@domingo` (o `@lun`, `@vie`): el próximo de ese día, hoy si coincide;
+  - período: `@s` (semana), `@m` (mes), `@p` (sin plazo).
+  - Ejemplo: `Entregar capítulo 2 !a @viernes`.
+- Si la tarea queda en otra vista, un aviso dice dónde quedó y trae un enlace "Ver".
 
-**Atajos globales** (fuera de un campo de texto; `?` muestra la lista completa): `1` a `4` cambian de vista, `←` y `→` van al período anterior o siguiente, `t` alterna lista y tablero, `Esc` cierra el panel.
+**Atajos globales** (fuera de un campo de texto; `?` muestra la lista completa): `1` a `5` cambian de vista, `←` y `→` van al período anterior o siguiente, `t` cambia entre calendario, lista y tablero, `n` o `/` enfocan el alta, `Esc` cierra el panel.
 
 ### 4.3 Vistas de planificación
 
-Cada vista muestra tareas de su horizonte, ordenadas por prioridad, luego por fecha (sin fecha al final) y luego por antigüedad:
+Cada vista incluye las tareas cuyo período cae dentro de ella y no es más largo que ella: la semana muestra sus días y la propia semana (no el mes); el mes, sus días, sus semanas (también las que lo cruzan) y el mes. Dentro de cada vista se ordena por prioridad, fecha y antigüedad.
 
-- **Hoy:** tareas del día actual (y las de largo plazo cuya fecha límite es hoy), más las vencidas sin terminar de cualquier horizonte, marcadas como "Vencida".
-- **Semana:** tareas de la semana elegida (lunes a domingo), con navegación a la semana anterior y siguiente.
-- **Mes:** tareas del mes elegido, con navegación por mes.
-- **Largo plazo:** todas las tareas de largo plazo, agrupadas por prioridad en la lista.
+- **Hoy:** las del día, las que vencen hoy y todas las vencidas sin terminar, marcadas "Vencida".
+- **Semana:** calendario de lunes a domingo con una banda "Durante la semana". Navegación a la semana anterior y siguiente.
+- **Mes:** calendario en grilla con una banda "Durante el mes" y, en cada semana que tenga tareas propias, una banda de semana. Cada día lleva a su semana.
+- **Largo plazo:** todo lo planificado desde el mes que viene, agrupado por mes.
+- **Por planificar:** las tareas sin plazo, con botones para mandarlas a hoy, esta semana o este mes.
 
-Cada vista se puede ver como **lista** (con casilla para finalizar) o como **tablero**. El modo elegido se recuerda en ese navegador.
+En los calendarios se **arrastra** para reprogramar: a otro día, a la banda de la semana o a la del mes. Una fecha límite sigue siendo fecha límite al cambiarla de día.
 
-En la lista, las finalizadas se agrupan al final en un bloque plegable ("Finalizadas"). La fecha de cada tarea se muestra solo cuando agrega información: una tarea de hoy en Hoy no dice "Hoy". La prioridad media, que es la de por defecto, no se rotula.
+Semana y Mes se ven como **calendario**, **lista** o **tablero**; las demás vistas, como lista o tablero. El modo elegido se recuerda en ese navegador (en el celular, el calendario arranca como lista).
 
-La pestaña Hoy y el título de la ventana muestran cuántas tareas quedan pendientes hoy (con las vencidas).
+En la lista, las tareas se agrupan según la vista (por día en Semana, por semana en Mes, por mes en Largo plazo) y las finalizadas van al final en un bloque plegable. La fecha de cada tarea se muestra solo cuando agrega información. La prioridad media, que es la de por defecto, no se rotula.
+
+Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; el título de la ventana, las de hoy.
 
 ### 4.4 Tablero
 
 - Columnas por estado: `PENDIENTE`, `EN_CURSO`, `FINALIZADA`.
 - Las tarjetas se arrastran entre columnas. Al soltarlas, el estado cambia y se guarda.
-- El tablero respeta el filtro de la vista activa (Hoy, Semana, Mes o Largo plazo).
+- El tablero respeta la vista activa.
 - Cada tarjeta muestra título, prioridad (con color discreto) y fecha.
-- Edición de título, descripción, estado, horizonte, fecha y prioridad desde un panel lateral, que se abre al hacer clic en la tarjeta. Se guarda al instante (los textos, al salir del campo).
+- Edición de título, descripción, estado, plazo, fecha y prioridad desde un panel lateral, que se abre al hacer clic en la tarjeta. Se guarda al instante (los textos, al salir del campo).
 - Eliminación con confirmación dentro del panel.
 
 ### 4.5 Prioridades
@@ -111,15 +117,15 @@ La pestaña Hoy y el título de la ventana muestran cuántas tareas quedan pendi
 
 ## 7. Modelo de datos
 
-Tabla `tarea` (migración `V1__tarea.sql`):
+Tabla `tarea` (migraciones `V1__tarea.sql` y `V2__plazos_anidados.sql`):
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `id` | UUID | Clave primaria |
 | `titulo` | texto, obligatorio | Máximo 200 caracteres |
 | `descripcion` | texto, opcional | Máximo 2000 caracteres |
-| `horizonte` | enum | `DIA`, `SEMANA`, `MES`, `LARGO_PLAZO` |
-| `fecha_referencia` | fecha, opcional | Según horizonte; obligatoria salvo en `LARGO_PLAZO` (restricción en la base) |
+| `horizonte` | enum | Plazo: `SIN_PLAZO`, `DIA`, `SEMANA`, `MES`, `LIMITE` |
+| `fecha_referencia` | fecha, opcional | Según el plazo; nula si y solo si es `SIN_PLAZO` (restricción en la base) |
 | `prioridad` | enum | `ALTA`, `MEDIA`, `BAJA` |
 | `estado` | enum | `PENDIENTE`, `EN_CURSO`, `FINALIZADA` |
 | `ambito` | enum | `PERSONAL`, `GRUPO` |
@@ -146,10 +152,12 @@ Endpoints del MVP:
 
 | Método y ruta | Qué hace | Respuesta |
 |---|---|---|
-| `GET /api/tareas?horizonte=&fecha=&prioridad=&estado=` | Tareas de un horizonte en el período que contiene a `fecha` (hoy si falta). En `LARGO_PLAZO`, todas. `prioridad` y `estado` filtran. | 200 |
+| `GET /api/tareas?desde=&hasta=&prioridad=&estado=` | Tareas planificadas dentro del rango, según la regla de §4.3. Sin `hasta`, el rango no tiene fin. `prioridad` y `estado` filtran. | 200 / 400 |
 | `GET /api/tareas/hoy?prioridad=&estado=` | Vista Hoy (§4.3). | 200 |
+| `GET /api/tareas/sin-plazo?prioridad=&estado=` | Por planificar. | 200 |
 | `GET /api/tareas/{id}` | Una tarea. | 200 / 404 |
-| `POST /api/tareas` | Alta. Cuerpo: `titulo`, `descripcion`, `horizonte`, `fechaReferencia`, `prioridad`. Sin fecha (salvo largo plazo), se usa hoy; sin prioridad, `MEDIA`. | 201 / 400 |
+| `POST /api/tareas` | Alta. Cuerpo: `titulo`, `descripcion`, `horizonte`, `fechaReferencia`, `prioridad`. Sin fecha (salvo sin plazo), se usa hoy; sin prioridad, `MEDIA`. | 201 / 400 |
+| `PATCH /api/tareas/{id}/plazo` | `{ "horizonte": "DIA", "fechaReferencia": "2026-11-24" }`: planificar o reprogramar. | 200 / 400 / 404 |
 | `PUT /api/tareas/{id}` | Edición completa, mismo cuerpo que el alta. | 200 / 400 / 404 |
 | `PATCH /api/tareas/{id}/estado` | `{ "estado": "FINALIZADA" }` | 200 / 400 / 404 |
 | `PATCH /api/tareas/{id}/prioridad` | `{ "prioridad": "ALTA" }` | 200 / 400 / 404 |
@@ -163,8 +171,8 @@ Etapa 2 suma los endpoints de grupos y miembros y el parámetro `ambito` en los 
 
 Implementadas (`./mvnw verify`):
 
-- Unitarias: cálculo de fecha de referencia y fin de período por horizonte (`HorizonteTest`), transiciones de estado, `completada_en` y vencimiento (`TareaTest`), orden por prioridad (`OrdenTareasTest`), "hoy" en hora argentina y títulos de período (`CalendarioTest`).
-- Navegador (`src/test/js`, `node --test`): atajos del alta rápida, fechas que se muestran, resumen de la vista y separación de finalizadas.
+- Unitarias: cálculo de fecha de referencia y fin de período por horizonte (`HorizonteTest`), qué tareas entran en cada vista (`RangoTest`), transiciones de estado, `completada_en` y vencimiento (`TareaTest`), orden por prioridad (`OrdenTareasTest`), "hoy" en hora argentina y títulos de período (`CalendarioTest`).
+- Navegador (`src/test/js`, `node --test`): atajos del alta rápida, calendario (semanas de un mes), agrupación de la lista, fechas que se muestran, resumen de la vista y separación de finalizadas.
 - Controladores con el service simulado: API (`TareaApiControllerTest`) y páginas (`TareaPaginaControllerTest`).
 - Integración de la API con PostgreSQL real (`TareaIntegracionTest`, Testcontainers): alta rápida, vista Hoy con vencidas, semana, mes, largo plazo, arrastre a finalizada, edición, eliminación y que no se vean tareas de otro usuario.
 
@@ -177,7 +185,7 @@ Pendiente:
 
 - El gestor de tareas es un módulo de CHI2, separado del web principal (repositorio propio).
 - Primero se usa en forma personal, después con grupos.
-- Horizontes: día, semana, mes y largo plazo.
+- Plazos anidados: sin plazo, día, semana, mes y fecha límite. Largo plazo es una vista, no un plazo (2026-11-19).
 - Prioridades: alta, media y baja.
 - El tablero usa los estados pendiente, en curso y finalizada.
 - En grupos, las tareas de grupo son visibles para todos los miembros; las personales, solo para su dueño.
@@ -197,3 +205,4 @@ Los pendientes se registran solo en `PENDIENTES.md`. Los que salen de este docum
 - **Sin login en la etapa 1:** todas las tareas son de un usuario fijo (`chi2.tareas.usuario-local`), detrás de la interfaz `UsuarioActual` que la etapa 2 reemplaza por el usuario logueado.
 - **Finalizadas al final de la lista.** La especificación ordena por prioridad; las finalizadas mezcladas con las pendientes hacían ruido, así que en la lista van en un bloque plegable al final (en el tablero ya tienen su columna).
 - **Atajos globales y ayuda (`?`)**, que la especificación no pedía, para usar la app sin mouse.
+- **Plazos anidados (2026-11-19, pedido de Nahuel).** El MVP tenía cuatro horizontes excluyentes y cada vista mostraba solo el suyo. Se reemplazó por plazos anidados (§4.1 y §4.3), la vista Por planificar y los calendarios de semana y mes. Las tareas `LARGO_PLAZO` existentes pasaron a `SIN_PLAZO` (sin fecha) o `LIMITE` (con fecha).

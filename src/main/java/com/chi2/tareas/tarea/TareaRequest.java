@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
 /**
  * Alta y edición de una tarea ({@code POST} y {@code PUT /api/tareas}).
  *
- * @param fechaReferencia cualquier día del período: se lleva al lunes o al primero del mes según el horizonte.
- *                        Si falta en día, semana o mes, se usa hoy. En largo plazo es la fecha límite, opcional.
+ * @param fechaReferencia cualquier día del período: se lleva al lunes o al primero del mes según el plazo.
+ *                        Si falta y el plazo la exige, se usa hoy. Sin plazo se ignora.
  * @param prioridad si falta, {@link Prioridad#POR_DEFECTO}
  */
 public record TareaRequest(
@@ -22,7 +22,7 @@ public record TareaRequest(
 		@Size(max = 2000, message = "La descripción puede tener hasta 2000 caracteres.")
 		String descripcion,
 
-		@NotNull(message = "Elegí un horizonte: DIA, SEMANA, MES o LARGO_PLAZO.")
+		@NotNull(message = "Elegí un plazo: SIN_PLAZO, DIA, SEMANA, MES o LIMITE.")
 		Horizonte horizonte,
 
 		LocalDate fechaReferencia,
