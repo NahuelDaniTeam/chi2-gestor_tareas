@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title th:text="${titulo} + ' · Tareas CHI2'">Tareas CHI2</title>
+	<meta name="theme-color" content="#f7f4ee">
+	<!-- Tema elegido (claro u oscuro) antes de pintar, para que no parpadee; sin elección, sigue al sistema -->
+	<script>try { var tema = localStorage.getItem("chi2-tareas-tema"); if (tema === "claro" || tema === "oscuro") document.documentElement.dataset.tema = tema; } catch (e) {}</script>
+	<link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+	<link rel="apple-touch-icon" th:href="@{/apple-touch-icon.png}">
+	<link rel="manifest" th:href="@{/site.webmanifest}">
+	<!-- Tipografías: las mismas que el web principal de CHI2 -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<!-- Ícono del sprite static/img/iconos.svg -->
+<svg th:fragment="icono(nombre, clase)" th:class="'icono ' + ${clase}" aria-hidden="true"><use th:href="@{/img/iconos.svg} + '#' + ${nombre}"></use></svg>
+
+<!-- Isotipo χ² (logo de CHI2, igual que en el web principal). Toma el color del texto; el "2" va en gris cálido. -->
+<svg th:fragment="isotipo(clase)" th:class="${clase}" viewBox="10 11 44 41" fill="none" stroke-linecap="round" aria-hidden="true">
+	<g transform="translate(-3 0)">
+		<path d="M16 17C22 17 25 24 30 33S38 49 44 49" stroke="currentColor" stroke-width="4.5"/>
+		<path d="M17 48 41 18" stroke="currentColor" stroke-width="2.2"/>
+		<path d="M45.5 17.5C45.5 14.8 48 13.5 50.5 13.8 52.8 14.1 54 15.8 53.5 17.8 53 19.8 49.5 22 45.5 25.5H54"
+		      stroke="#a8a29e" stroke-width="2.2" stroke-linejoin="round"/>
+	</g>
+</svg>
+
+<!-- Logo del módulo: χ² | CHI2 · Tareas -->
+<a th:fragment="logo" th:href="@{/}" class="flex shrink-0 items-center gap-3 text-tinta" title="Ir a Hoy">
+	<svg th:replace="~{fragments/layout :: isotipo('h-7 w-auto')}"></svg>
+	<span class="h-6 w-px bg-linea" aria-hidden="true"></span>
+	<span class="font-display text-[1.6rem] leading-none tracking-wide">CHI<em class="text-[#a8a29e]">2</em></span>
+	<span class="text-sm text-tenue max-sm:sr-only">Tareas</span>
+	<span class="sr-only">, ir a Hoy</span>
+</a>
+
+<!-- Encabezado: marca y vistas de planificación (§4.3) -->
+<header th:fragment="encabezado" class="sticky top-0 z-20 border-b border-linea/80 bg-fondo/90 backdrop-blur">
+	<nav class="contenedor flex items-center justify-between gap-6 py-3.5" aria-label="Vistas">
+		<a th:replace="~{fragments/layout :: logo}"></a>
+		<ul class="-mr-1 ml-auto flex gap-0.5 overflow-x-auto text-sm text-tenue">
+			<li th:each="v, i : ${T(com.chi2.tareas.tarea.Vista).values()}">
+				<a th:href="@{${v.ruta}}" class="pestana" th:data-vista="${v.name()}"
+				   th:title="${v.etiqueta} + ' (' + ${i.count} + ')'"
+				   th:attr="aria-current=${vista != null and v == vista} ? 'page' : null">
+					<span th:text="${v.etiqueta}">Vista</span>
+					<span th:if="${v.name() == 'HOY'}" class="contador" data-contador-hoy hidden></span>
+					<span th:if="${v.name() == 'POR_PLANIFICAR'}" class="contador contador-suave" data-contador-sin-plazo hidden></span>
+				</a>
+			</li>
+		</ul>
+		<button type="button" class="boton-icono" data-abrir-buscador aria-label="Buscar (Ctrl+K)" title="Buscar (Ctrl+K)">
+			<svg th:replace="~{fragments/layout :: icono('buscar', 'size-4')}"></svg>
+		</button>
+		<details class="menu">
+			<summary class="boton-icono" aria-label="Más opciones" title="Más opciones">
+				<svg th:replace="~{fragments/layout :: icono('puntos', 'size-4')}"></svg>
+			</summary>
+			<div class="menu-contenido">
+				<a th:href="@{/revision}" class="menu-opcion">
+					<svg th:replace="~{fragments/layout :: icono('revision', 'size-4')}"></svg>Revisión semanal
+				</a>
+				<a th:href="@{/estadisticas}" class="menu-opcion">
+					<svg th:replace="~{fragments/layout :: icono('grafico', 'size-4')}"></svg>Estadísticas
+				</a>
+				<a th:href="@{/papelera}" class="menu-opcion">
+					<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Papelera
+				</a>
+				<div class="my-1 border-t border-linea"></div>
+				<a th:href="@{/api/exportar/csv}" class="menu-opcion" download>
+					<svg th:replace="~{fragments/layout :: icono('descargar', 'size-4')}"></svg>Exportar tareas (CSV)
+				</a>
+				<a th:href="@{/api/exportar/json}" class="menu-opcion" download>
+					<svg th:replace="~{fragments/layout :: icono('descargar', 'size-4')}"></svg>Respaldo completo (JSON)
+				</a>
+				<div class="mt-1 border-t border-linea px-2.5 pt-2.5 pb-1">
+					<p class="mb-2 text-xs text-tenue">Tema</p>
+					<div class="segmentado segmentado-ancho segmentado-chico" role="group" aria-label="Tema">
+						<button type="button" data-tema="sistema">Sistema</button>
+						<button type="button" data-tema="claro"><svg th:replace="~{fragments/layout :: icono('sol', 'size-3.5')}"></svg>Claro</button>
+						<button type="button" data-tema="oscuro"><svg th:replace="~{fragments/layout :: icono('luna', 'size-3.5')}"></svg>Oscuro</button>
+					</div>
+				</div>
+				<p class="px-2.5 pt-2 pb-1 text-[0.6875rem] text-tenue">
+					Versión <span th:text="${@environment.getProperty('info.app.version')}">0.2.0</span> ·
+					<a th:href="@{/api/docs}" class="underline decoration-linea underline-offset-2 hover:text-tinta">API</a>
+				</p>
+			</div>
+		</details>
+	</nav>
+
+	<!-- Buscador (Ctrl+K) y recordatorios: en todas las páginas -->
+	<dialog id="buscador" class="dialogo dialogo-arriba max-w-xl" aria-label="Buscar">
+		<div class="flex items-center gap-3 border-b border-linea px-4">
+			<svg th:replace="~{fragments/layout :: icono('buscar', 'size-4 text-tenue')}"></svg>
+			<input id="buscador-campo" class="min-w-0 flex-1 bg-transparent py-3.5 outline-none placeholder:text-tenue/70"
+			       placeholder="Buscar tareas o ir a una vista" autocomplete="off"
+			       role="combobox" aria-expanded="true" aria-controls="buscador-resultados">
+			<kbd>Esc</kbd>
+		</div>
+		<ul id="buscador-resultados" class="max-h-96 overflow-y-auto p-1.5" role="listbox"></ul>
+	</dialog>
+	<script type="module" th:src="@{/js/buscador.js}"></script>
+	<script type="module" th:src="@{/js/recordatorios.js}"></script>
+	<script type="module" th:src="@{/js/tema.js}"></script>
+</header>
+
+</body>
+</html>

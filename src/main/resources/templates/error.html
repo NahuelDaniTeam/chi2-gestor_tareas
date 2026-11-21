@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${status == 404} ? 'Página no encontrada' : 'Algo salió mal')}"></head>
+<body class="bg-fondo font-sans text-tinta antialiased">
+<header class="border-b border-linea/80">
+	<div class="contenedor py-3.5">
+		<a th:replace="~{fragments/layout :: logo}"></a>
+	</div>
+</header>
+<main class="contenedor pt-20 pb-28 sm:pt-28">
+	<p class="etiqueta" th:text="'Error ' + ${status}">Error 404</p>
+	<h1 class="titulo-display mt-5 max-w-2xl text-5xl sm:text-6xl"
+	    th:text="${status == 404} ? 'Esta página no existe.' : 'Algo salió mal.'">Esta página no existe.</h1>
+	<p class="mt-5 max-w-lg text-lg text-tenue"
+	   th:text="${status == 404} ? 'Puede que el enlace esté mal escrito. Tus tareas están a salvo.' : 'Tus tareas están guardadas. Probá de nuevo en un momento.'">
+		Puede que el enlace esté mal escrito.
+	</p>
+	<a th:href="@{/}" class="boton-principal mt-9 inline-flex px-4 py-2">Volver a Hoy</a>
+</main>
+</body>
+</html>

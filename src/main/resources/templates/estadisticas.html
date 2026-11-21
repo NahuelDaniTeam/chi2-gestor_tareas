@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Estadísticas')}"></head>
+<body class="bg-fondo font-sans text-tinta antialiased">
+<header th:replace="~{fragments/layout :: encabezado}"></header>
+
+<main class="contenedor pb-28">
+	<section class="pt-10 pb-8 sm:pt-14">
+		<p class="etiqueta">Estadísticas</p>
+		<h1 class="titulo-display mt-4 text-[2.75rem] sm:text-6xl">Cómo venís</h1>
+	</section>
+
+	<!-- Números principales -->
+	<section class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-linea bg-linea lg:grid-cols-4" aria-label="Resumen">
+		<div class="dato"><p class="dato-rotulo">Finalizadas esta semana</p><p class="dato-valor" data-dato="semana">–</p><p class="dato-nota" data-dato="comparacion"></p></div>
+		<div class="dato"><p class="dato-rotulo">Racha</p><p class="dato-valor" data-dato="racha">–</p><p class="dato-nota">días seguidos terminando algo</p></div>
+		<div class="dato"><p class="dato-rotulo">Pendientes</p><p class="dato-valor" data-dato="pendientes">–</p><p class="dato-nota">sin terminar, con o sin plazo</p></div>
+		<div class="dato"><p class="dato-rotulo">Vencidas</p><p class="dato-valor" data-dato="vencidas">–</p><p class="dato-nota">quedaron atrás sin terminar</p></div>
+	</section>
+
+	<!-- Finalizadas por semana -->
+	<section class="mt-10 rounded-xl border border-linea bg-superficie p-5 sm:p-7">
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="font-display text-3xl">Finalizadas por semana</h2>
+			<p class="text-sm text-tenue">Últimas 8 semanas</p>
+		</div>
+		<div id="grafico" class="relative mt-6" role="img" aria-label="Tareas finalizadas por semana, últimas 8 semanas"></div>
+		<details class="mt-4 text-sm">
+			<summary class="cursor-pointer text-tenue hover:text-tinta">Ver como tabla</summary>
+			<table class="tabla mt-3">
+				<thead><tr><th scope="col">Semana</th><th scope="col" class="text-right">Finalizadas</th></tr></thead>
+				<tbody id="tabla-semanas"></tbody>
+			</table>
+		</details>
+	</section>
+
+	<!-- Por proyecto -->
+	<section class="mt-10">
+		<h2 class="font-display text-3xl">Por proyecto</h2>
+		<table class="tabla mt-4 overflow-hidden rounded-xl border border-linea bg-superficie">
+			<thead><tr><th scope="col">Proyecto</th><th scope="col" class="text-right">Finalizadas (30 días)</th><th scope="col" class="text-right">Pendientes</th></tr></thead>
+			<tbody id="tabla-proyectos"></tbody>
+		</table>
+	</section>
+</main>
+
+<div id="aviso" class="aviso" role="status" hidden></div>
+<script type="module" th:src="@{/js/estadisticas.js}"></script>
+</body>
+</html>

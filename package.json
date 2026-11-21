@@ -1,0 +1,17 @@
+{
+  "name": "chi2-gestor-tareas",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i src/main/frontend/main.css -o src/main/resources/static/css/main.css --minify",
+    "watch:css": "tailwindcss -i src/main/frontend/main.css -o src/main/resources/static/css/main.css --watch",
+    "test:js": "node --test \"src/test/js/*.test.js\"",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
+    "@tailwindcss/cli": "4.1.11",
+    "tailwindcss": "4.1.11"
+  },
+  "type": "module"
+}

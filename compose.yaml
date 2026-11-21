@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: 'postgres:17'
+    environment:
+      - 'POSTGRES_DB=chi2_tareas'
+      - 'POSTGRES_PASSWORD=chi2'
+      - 'POSTGRES_USER=chi2'
+    ports:
+      - '5432'
+    # Las tareas se guardan en un volumen: sobreviven a reinicios del contenedor y de la PC.
+    volumes:
+      - 'tareas-datos:/var/lib/postgresql/data'
+volumes:
+  tareas-datos:

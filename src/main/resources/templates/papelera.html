@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Papelera')}"></head>
+<body class="bg-fondo font-sans text-tinta antialiased">
+<header th:replace="~{fragments/layout :: encabezado}"></header>
+
+<main class="contenedor pb-28">
+	<section class="pt-10 pb-7 sm:pt-14">
+		<p class="etiqueta">Papelera</p>
+		<h1 class="titulo-display mt-4 text-[2.75rem] sm:text-6xl">Tareas eliminadas</h1>
+		<p class="mt-4 max-w-xl text-tenue">
+			Se pueden restaurar durante <span th:text="${diasRetencion}">30</span> días; después se borran solas.
+		</p>
+	</section>
+
+	<div class="mb-4 flex justify-end">
+		<button id="vaciar" type="button" class="boton-texto inline-flex items-center gap-2 hover:text-acento" hidden>
+			<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Vaciar papelera
+		</button>
+	</div>
+	<ul id="papelera" class="divide-y divide-linea overflow-hidden rounded-xl border border-linea bg-superficie" hidden></ul>
+	<div id="papelera-vacia" class="rounded-xl border border-dashed border-linea px-6 py-16 text-center" hidden>
+		<p class="font-display text-3xl">La papelera está vacía</p>
+		<p class="mt-2 text-tenue">Lo que elimines va a quedar acá por si te arrepentís.</p>
+	</div>
+</main>
+
+<div id="aviso" class="aviso" role="status" hidden></div>
+<script type="module" th:src="@{/js/papelera.js}"></script>
+</body>
+</html>
