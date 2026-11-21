@@ -11,6 +11,7 @@ import java.util.UUID;
  * @param vencida sin terminar y con su período o fecha límite ya pasado
  * @param pasos checklist, en orden
  * @param eliminadaEn solo en la papelera
+ * @param proximaRepeticion fecha de la próxima, si se repite
  */
 public record TareaResponse(
 		UUID id,
@@ -27,5 +28,8 @@ public record TareaResponse(
 		Instant actualizadaEn,
 		Instant completadaEn,
 		List<PasoResponse> pasos,
-		Instant eliminadaEn) {
+		Instant eliminadaEn,
+		Repeticion repeticion,
+		LocalDate proximaRepeticion,
+		Instant recordatorio) {
 }

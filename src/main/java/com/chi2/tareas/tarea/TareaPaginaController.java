@@ -67,6 +67,7 @@ public class TareaPaginaController {
 		model.addAttribute("horizontes", Horizonte.values());
 		model.addAttribute("prioridades", Prioridad.values());
 		model.addAttribute("estados", EstadoTarea.values());
+		model.addAttribute("repeticiones", Repeticion.values());
 		return "tareas";
 	}
 

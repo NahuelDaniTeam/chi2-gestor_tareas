@@ -35,6 +35,10 @@ async function pedir(metodo, url, cuerpo) {
 
 export const api = {
 	listar: url => pedir("GET", url),
+	obtener: id => pedir("GET", `/api/tareas/${id}`),
+	buscar: texto => pedir("GET", `/api/tareas/buscar?q=${encodeURIComponent(texto)}`),
+	recordatorios: () => pedir("GET", "/api/tareas/recordatorios"),
+	recordatorioAvisado: id => pedir("POST", `/api/tareas/${id}/recordatorio/avisado`),
 	crear: tarea => pedir("POST", "/api/tareas", tarea),
 	editar: (id, tarea) => pedir("PUT", `/api/tareas/${id}`, tarea),
 	cambiarPlazo: (id, horizonte, fechaReferencia) => pedir("PATCH", `/api/tareas/${id}/plazo`, { horizonte, fechaReferencia }),

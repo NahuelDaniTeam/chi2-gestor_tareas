@@ -116,6 +116,25 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 - Lo que lleva más de **30 días** en la papelera se borra solo (`chi2.tareas.retencion-papelera`; se revisa cada hora).
 - Las tareas en la papelera no aparecen en ninguna vista ni en la API de tareas.
 
+### 4.9 Tareas recurrentes
+
+- En el panel, "Repetir": no se repite, todos los días, días hábiles (lunes a viernes), cada semana o cada mes.
+- Una tarea de día o con fecha límite admite todas; una de semana, cada semana o cada mes; una de mes, cada mes; sin plazo no se repite. Si se cambia a un plazo que no admite la repetición elegida, deja de repetirse.
+- Al **finalizarla** se crea la siguiente con la próxima fecha, el mismo título, descripción, prioridad, proyecto, repetición y pasos (sin tildar), y el recordatorio corrido a la nueva fecha. Se crea una sola vez: reabrirla y volver a finalizarla no la duplica.
+- Un aviso dice cuándo es la próxima.
+
+### 4.10 Recordatorios
+
+- En el panel, "Recordarme" con día y hora. Cambiar la hora vuelve a habilitar el aviso.
+- Mientras haya alguna página de la app abierta, cada 30 segundos se fija si llegó la hora de alguno: avisa con una **notificación del sistema** (el permiso se pide al programar el primero) y con un aviso en la página que lleva a la tarea.
+- Las tareas finalizadas no avisan. Con la app cerrada no hay avisos (para eso haría falta el inicio automático, `PENDIENTES.md` 4).
+
+### 4.11 Buscador
+
+- **Ctrl+K** (o la lupa del encabezado) desde cualquier página: busca por título o descripción, sin distinguir mayúsculas ni tildes, y muestra primero las sin terminar.
+- También ofrece ir a cada vista, la revisión semanal, las estadísticas y la papelera.
+- Flechas para moverse, Enter para abrir: la tarea se abre en el panel de su vista.
+
 ## 5. Etapa 2: grupos (después del MVP personal)
 
 - Un usuario puede **crear grupos** (por ejemplo, "Tesis") e invitar a otros usuarios.
@@ -131,8 +150,6 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 
 ## 6. Fuera de alcance del MVP
 
-- Recordatorios y notificaciones.
-- Tareas recurrentes.
 - Adjuntos.
 - Edición en tiempo real entre usuarios (los cambios se ven al recargar; la lista también se recarga al volver a la ventana).
 - App nativa. La API REST ya queda preparada para sumarla más adelante.
@@ -160,6 +177,8 @@ Tabla `tarea` (migraciones `V1__tarea.sql` y `V2__plazos_anidados.sql`):
 Tabla `proyecto` (`V3__proyecto.sql`): `id`, `usuario_id`, `nombre`, `color`, `creado_en`. La tarea suma `proyecto_id` (clave foránea; al borrar el proyecto queda en nulo).
 
 `V4__pasos_y_papelera.sql` suma la tabla `paso` (`tarea_id`, `texto`, `hecho`, `orden`; se borra con su tarea) y `tarea.eliminada_en` (papelera).
+
+`V5__repeticion_recordatorio_busqueda.sql` suma `repeticion`, `siguiente_creada`, `recordatorio`, `recordatorio_avisado` y la extensión `unaccent` para el buscador.
 
 Etapa 2 agrega las tablas `grupo` y `miembro_grupo` (grupo, usuario y rol) y las claves foráneas de `grupo_id` y `asignado_a`. El modelo queda preparado desde el MVP con `usuario_id` y `ambito`, para no rehacer la base.
 
@@ -201,7 +220,11 @@ Endpoints del MVP:
 | `DELETE /api/papelera/{id}` | Borra para siempre. | 204 / 404 |
 | `DELETE /api/papelera` | Vacía la papelera. | 204 |
 
-`DELETE /api/tareas/{id}` manda la tarea a la papelera. Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
+| `GET /api/tareas/buscar?q=` | Hasta 30 tareas que contienen el texto. | 200 |
+| `GET /api/tareas/recordatorios` | Recordatorios que ya llegaron y no se avisaron. | 200 |
+| `POST /api/tareas/{id}/recordatorio/avisado` | Marca el recordatorio como avisado. | 204 / 404 |
+
+El alta y la edición aceptan `repeticion` (`NINGUNA`, `DIARIA`, `HABILES`, `SEMANAL`, `MENSUAL`) y `recordatorio` (instante ISO); la respuesta suma `proximaRepeticion`. `DELETE /api/tareas/{id}` manda la tarea a la papelera. Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
 
 Los errores vuelven como `ProblemDetail`; los de validación, con un mapa `errores` por campo. Una tarea de otro usuario responde 404, igual que una inexistente.
 

@@ -12,6 +12,7 @@ import com.chi2.tareas.tarea.FiltroTareas;
 import com.chi2.tareas.tarea.Horizonte;
 import com.chi2.tareas.tarea.Prioridad;
 import com.chi2.tareas.tarea.Rango;
+import com.chi2.tareas.tarea.Repeticion;
 import com.chi2.tareas.tarea.TareaNoEncontradaException;
 import com.chi2.tareas.tarea.TareaRequest;
 import com.chi2.tareas.tarea.TareaResponse;
@@ -227,7 +228,7 @@ class TareaApiControllerTest {
 		Instant ahora = WebMvcTestConfig.AHORA;
 		return new TareaResponse(ID, "Leer capítulo 3", null, Horizonte.SEMANA, LocalDate.parse("2026-11-16"),
 				Prioridad.ALTA, estado, Ambito.PERSONAL, null, false, ahora, ahora,
-				estado == EstadoTarea.FINALIZADA ? ahora : null, List.of(), null);
+				estado == EstadoTarea.FINALIZADA ? ahora : null, List.of(), null, Repeticion.NINGUNA, null, null);
 	}
 
 }

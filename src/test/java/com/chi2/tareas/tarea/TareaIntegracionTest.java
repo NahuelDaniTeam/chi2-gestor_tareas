@@ -265,6 +265,70 @@ class TareaIntegracionTest {
 	}
 
 	@Test
+	void alFinalizarUnaRecurrenteAparecePorCuentaPropiaLaSiguiente() throws Exception {
+		String cuerpo = mvc.perform(post("/api/tareas").contentType(MediaType.APPLICATION_JSON).content("""
+						{ "titulo": "Regar las plantas", "horizonte": "DIA", "fechaReferencia": "2026-11-19",
+						  "repeticion": "HABILES" }
+						"""))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.repeticion").value("HABILES"))
+				.andExpect(jsonPath("$.proximaRepeticion").value("2026-11-20"))
+				.andReturn().getResponse().getContentAsString();
+		String id = JsonPath.read(cuerpo, "$.id");
+
+		cambiarEstado(id, "FINALIZADA").andExpect(status().isOk());
+		cambiarEstado(id, "PENDIENTE");
+		cambiarEstado(id, "FINALIZADA");
+
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-20").param("hasta", "2026-11-20"))
+				.andExpect(jsonPath("$[*].titulo", contains("Regar las plantas")))
+				.andExpect(jsonPath("$[0].estado").value("PENDIENTE"));
+		assertThat(repository.count()).as("se crea una sola vez").isEqualTo(2);
+	}
+
+	@Test
+	void unaTareaSinPlazoNoSePuedeRepetir() throws Exception {
+		mvc.perform(post("/api/tareas").contentType(MediaType.APPLICATION_JSON).content("""
+						{ "titulo": "x", "horizonte": "SIN_PLAZO", "repeticion": "DIARIA" }
+						"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.detail").value("Para repetir una tarea, primero ponele un plazo."));
+	}
+
+	@Test
+	void elBuscadorNoDistingueTildesNiMayusculasYDejaLasFinalizadasAlFinal() throws Exception {
+		String vieja = crear("Leer el CAPÍTULO 3", "DIA", "2026-11-19", "MEDIA");
+		cambiarEstado(vieja, "FINALIZADA");
+		crear("Escribir capitulo 4", "SIN_PLAZO", null, "MEDIA");
+		crear("Comprar yerba", "SIN_PLAZO", null, "MEDIA");
+		String borrada = crear("Capítulo descartado", "SIN_PLAZO", null, "MEDIA");
+		mvc.perform(delete("/api/tareas/{id}", borrada));
+
+		mvc.perform(get("/api/tareas/buscar").param("q", "capítulo"))
+				.andExpect(jsonPath("$[*].titulo", contains("Escribir capitulo 4", "Leer el CAPÍTULO 3")));
+		mvc.perform(get("/api/tareas/buscar").param("q", "100%")).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(get("/api/tareas/buscar").param("q", "  ")).andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void losRecordatoriosLlegadosSeAvisanUnaVez() throws Exception {
+		String cuerpo = mvc.perform(post("/api/tareas").contentType(MediaType.APPLICATION_JSON).content("""
+						{ "titulo": "Llamar al dentista", "horizonte": "DIA", "fechaReferencia": "2026-11-19",
+						  "recordatorio": "2026-11-19T16:00:00Z" }
+						"""))
+				.andExpect(jsonPath("$.recordatorio").value("2026-11-19T16:00:00Z"))
+				.andReturn().getResponse().getContentAsString();
+		String id = JsonPath.read(cuerpo, "$.id");
+
+		mvc.perform(get("/api/tareas/recordatorios")).andExpect(jsonPath("$.length()").value(0));
+		reloj.adelantar(Duration.ofHours(1));
+		mvc.perform(get("/api/tareas/recordatorios")).andExpect(jsonPath("$[*].titulo", contains("Llamar al dentista")));
+
+		mvc.perform(post("/api/tareas/{id}/recordatorio/avisado", id)).andExpect(status().isNoContent());
+		mvc.perform(get("/api/tareas/recordatorios")).andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
 	void elChecklistSeAgregaTildaEditaYBorra() throws Exception {
 		String id = crear("Capítulo 2", "SEMANA", "2026-11-19", "ALTA");
 

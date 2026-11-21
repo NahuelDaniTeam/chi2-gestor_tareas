@@ -7,7 +7,7 @@ import { api } from "./api.js";
 import { iniciarAlta } from "./alta.js";
 import { deshacer, registrar } from "./deshacer.js";
 import { avisar, guardarPreferencia, leerPreferencia } from "./dom.js";
-import { isoLocal, resumen } from "./formato.js";
+import { dondeQuedo, isoLocal, resumen } from "./formato.js";
 import { iniciarPanel } from "./panel.js";
 import { iniciarProyectos } from "./proyectos.js";
 import { dibujar, habilitarArrastre } from "./render.js";
@@ -101,6 +101,10 @@ async function cambiarEstado(tarea, nuevo) {
 		Object.assign(tarea, await api.cambiarEstado(tarea.id, nuevo));
 		render();
 		actualizarContadores();
+		if (nuevo === "FINALIZADA" && tarea.proximaRepeticion) {
+			avisar(`Se repite: la próxima es ${dondeQuedo({ horizonte: tarea.horizonte, fechaReferencia: tarea.proximaRepeticion }, contexto.hoy)}.`);
+			cargar();
+		}
 		registrar(nuevo === "FINALIZADA" ? "Tarea finalizada" : "Estado cambiado", async () => {
 			await api.cambiarEstado(tarea.id, anterior);
 			await cargar();
@@ -208,6 +212,21 @@ document.addEventListener("visibilitychange", () => {
 	else cargar();
 });
 
+/** Desde el buscador o un recordatorio se llega con ?tarea=<id>: se abre en el panel. */
+async function abrirTareaPedida() {
+	const parametros = new URLSearchParams(location.search);
+	const id = parametros.get("tarea");
+	if (!id) return;
+	parametros.delete("tarea");
+	history.replaceState(null, "", location.pathname + (parametros.size ? "?" + parametros : ""));
+	try {
+		panel.abrir(await api.obtener(id));
+	} catch {
+		avisar("No encontramos esa tarea.", { error: true });
+	}
+}
+
 render();
-cargar();
+await cargar();
 alta.enfocar();
+abrirTareaPedida();

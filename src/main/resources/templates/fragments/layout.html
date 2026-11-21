@@ -52,6 +52,9 @@
 				</a>
 			</li>
 		</ul>
+		<button type="button" class="boton-icono" data-abrir-buscador aria-label="Buscar (Ctrl+K)" title="Buscar (Ctrl+K)">
+			<svg th:replace="~{fragments/layout :: icono('buscar', 'size-4')}"></svg>
+		</button>
 		<details class="menu">
 			<summary class="boton-icono" aria-label="Más opciones" title="Más opciones">
 				<svg th:replace="~{fragments/layout :: icono('puntos', 'size-4')}"></svg>
@@ -63,6 +66,20 @@
 			</div>
 		</details>
 	</nav>
+
+	<!-- Buscador (Ctrl+K) y recordatorios: en todas las páginas -->
+	<dialog id="buscador" class="dialogo dialogo-arriba max-w-xl" aria-label="Buscar">
+		<div class="flex items-center gap-3 border-b border-linea px-4">
+			<svg th:replace="~{fragments/layout :: icono('buscar', 'size-4 text-tenue')}"></svg>
+			<input id="buscador-campo" class="min-w-0 flex-1 bg-transparent py-3.5 outline-none placeholder:text-tenue/70"
+			       placeholder="Buscar tareas o ir a una vista" autocomplete="off"
+			       role="combobox" aria-expanded="true" aria-controls="buscador-resultados">
+			<kbd>Esc</kbd>
+		</div>
+		<ul id="buscador-resultados" class="max-h-96 overflow-y-auto p-1.5" role="listbox"></ul>
+	</dialog>
+	<script type="module" th:src="@{/js/buscador.js}"></script>
+	<script type="module" th:src="@{/js/recordatorios.js}"></script>
 </header>
 
 </body>

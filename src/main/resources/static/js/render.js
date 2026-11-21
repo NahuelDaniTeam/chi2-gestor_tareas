@@ -5,7 +5,7 @@
 
 import { el, icono, leerPreferencia, guardarPreferencia } from "./dom.js";
 import {
-	ESTADOS, PRIORIDADES, agrupar, diasDeSemana, etiquetaFecha, semanasDelMes, separarFinalizadas, textoDiaSemana
+	ESTADOS, PRIORIDADES, REPETICIONES, agrupar, textoRecordatorio, diasDeSemana, etiquetaFecha, semanasDelMes, separarFinalizadas, textoDiaSemana
 } from "./formato.js";
 
 const MAX_POR_CELDA = 3;
@@ -319,6 +319,12 @@ function meta(t, contexto, { conEstado }) {
 	if (fecha) {
 		partes.push(el("span", "inline-flex items-center gap-1" + (t.horizonte === "LIMITE" ? " text-tinta" : ""),
 			icono(t.horizonte === "LIMITE" ? "bandera" : "calendario", "size-3.5"), fecha));
+	}
+	if (t.repeticion && t.repeticion !== "NINGUNA") {
+		partes.push(el("span", "inline-flex items-center gap-1", icono("repetir", "size-3.5"), REPETICIONES[t.repeticion]));
+	}
+	if (t.recordatorio && t.estado !== "FINALIZADA") {
+		partes.push(el("span", "inline-flex items-center gap-1", icono("campana", "size-3.5"), textoRecordatorio(t.recordatorio, contexto.hoy)));
 	}
 	if (t.pasos?.length) {
 		const hechos = t.pasos.filter(p => p.hecho).length;

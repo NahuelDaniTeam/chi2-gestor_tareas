@@ -180,6 +180,22 @@
 			<p id="p-fecha-ayuda" class="mt-2 text-xs text-tenue empty:hidden"></p>
 		</fieldset>
 
+		<div class="grid grid-cols-2 gap-4">
+			<div>
+				<label for="p-repeticion" class="rotulo">Repetir</label>
+				<select id="p-repeticion" name="repeticion" class="campo">
+					<option th:each="r : ${repeticiones}" th:value="${r.name()}" th:text="${r.etiqueta}">No se repite</option>
+				</select>
+			</div>
+			<div>
+				<div class="flex items-baseline justify-between">
+					<label for="p-recordatorio" class="rotulo">Recordarme</label>
+					<button type="button" id="p-quitar-recordatorio" class="text-xs text-tenue hover:text-acento">Quitar</button>
+				</div>
+				<input id="p-recordatorio" name="recordatorio" type="datetime-local" class="campo">
+			</div>
+		</div>
+
 		<div>
 			<div class="mb-2 flex items-baseline justify-between">
 				<span class="rotulo mb-0">Checklist</span>
@@ -259,6 +275,7 @@
 				<dt><kbd>T</kbd></dt><dd>Cambiar entre calendario, lista y tablero</dd>
 				<dt><kbd>Esc</kbd></dt><dd>Cerrar el panel</dd>
 				<dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Deshacer (eliminar, mover, finalizar)</dd>
+				<dt><kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Buscar tareas o ir a una vista</dd>
 				<dt><kbd>?</kbd></dt><dd>Esta ayuda</dd>
 			</dl>
 		</section>

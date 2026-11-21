@@ -1,10 +1,12 @@
 package com.chi2.tareas.tarea;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
@@ -84,6 +86,19 @@ public class Tarea {
 	@Column(name = "eliminada_en")
 	private Instant eliminadaEn;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 8)
+	private Repeticion repeticion = Repeticion.NINGUNA;
+
+	@Column(name = "siguiente_creada", nullable = false)
+	private boolean siguienteCreada;
+
+	@Column
+	private Instant recordatorio;
+
+	@Column(name = "recordatorio_avisado", nullable = false)
+	private boolean recordatorioAvisado;
+
 	@OneToMany(mappedBy = "tarea", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("orden")
 	@BatchSize(size = 100)
@@ -123,7 +138,66 @@ public class Tarea {
 		}
 		this.horizonte = horizonte;
 		this.fechaReferencia = horizonte.fechaReferencia(fecha);
+		if (!repeticion.admite(horizonte)) {
+			this.repeticion = Repeticion.NINGUNA;
+		}
 		this.actualizadaEn = ahora;
+	}
+
+	// ---------- Repetición (§4.9) ----------
+
+	/** @throws IllegalArgumentException si el plazo no admite esa repetición (por ejemplo, sin plazo) */
+	public void programarRepeticion(Repeticion nueva, Instant ahora) {
+		Objects.requireNonNull(nueva);
+		if (!nueva.admite(horizonte)) {
+			throw new IllegalArgumentException(horizonte == Horizonte.SIN_PLAZO
+					? "Para repetir una tarea, primero ponele un plazo."
+					: "Una tarea de " + horizonte.getEtiqueta().toLowerCase() + " no puede repetirse "
+							+ nueva.getEtiqueta().toLowerCase() + ".");
+		}
+		this.repeticion = nueva;
+		this.actualizadaEn = ahora;
+	}
+
+	/** Fecha de la próxima, si se repite. */
+	public LocalDate proximaRepeticion() {
+		return repeticion == Repeticion.NINGUNA ? null : repeticion.siguiente(fechaReferencia);
+	}
+
+	/**
+	 * La copia para la próxima vez: mismo título, descripción, prioridad, proyecto, repetición y pasos
+	 * (sin tildar). Se crea una sola vez, al finalizar; si se reabre y se vuelve a finalizar, no se duplica.
+	 */
+	public Optional<Tarea> crearSiguiente(Instant ahora) {
+		if (repeticion == Repeticion.NINGUNA || siguienteCreada || estado != EstadoTarea.FINALIZADA) {
+			return Optional.empty();
+		}
+		siguienteCreada = true;
+		LocalDate proxima = proximaRepeticion();
+		Tarea siguiente = new Tarea(titulo, descripcion, horizonte, proxima, prioridad, usuarioId, ahora);
+		siguiente.proyectoId = proyectoId;
+		siguiente.repeticion = repeticion;
+		pasos.forEach(p -> siguiente.agregarPaso(p.getTexto(), ahora));
+		if (recordatorio != null) {
+			siguiente.recordatorio = recordatorio.plus(Duration.between(
+					fechaReferencia.atStartOfDay(), proxima.atStartOfDay()));
+		}
+		return Optional.of(siguiente);
+	}
+
+	// ---------- Recordatorio (§4.10) ----------
+
+	/** Cambiar la hora vuelve a habilitar el aviso. */
+	public void programarRecordatorio(Instant momento, Instant ahora) {
+		if (!Objects.equals(momento, recordatorio)) {
+			this.recordatorio = momento;
+			this.recordatorioAvisado = false;
+			this.actualizadaEn = ahora;
+		}
+	}
+
+	public void marcarRecordatorioAvisado() {
+		this.recordatorioAvisado = true;
 	}
 
 	/** Al pasar a finalizada registra cuándo; al volver a otro estado, lo borra. */
@@ -249,6 +323,18 @@ public class Tarea {
 
 	public Instant getCompletadaEn() {
 		return completadaEn;
+	}
+
+	public Repeticion getRepeticion() {
+		return repeticion;
+	}
+
+	public Instant getRecordatorio() {
+		return recordatorio;
+	}
+
+	public boolean isRecordatorioAvisado() {
+		return recordatorioAvisado;
 	}
 
 	public Instant getEliminadaEn() {

@@ -28,6 +28,20 @@ public interface TareaRepository extends JpaRepository<Tarea, UUID> {
 	List<Tarea> findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(UUID usuarioId, Ambito ambito,
 			EstadoTarea estado, LocalDate fecha);
 
+	/** Recordatorios que ya llegaron y todavía no se avisaron (de tareas sin terminar). */
+	List<Tarea> findByUsuarioIdAndAmbitoAndRecordatorioLessThanEqualAndRecordatorioAvisadoFalseAndEstadoNot(
+			UUID usuarioId, Ambito ambito, Instant momento, EstadoTarea estado);
+
+	/**
+	 * Buscador: título o descripción que contengan el texto, sin distinguir mayúsculas ni tildes.
+	 * Primero las sin terminar, después las más recientes.
+	 */
+	@Query(value = "select * from tarea where usuario_id = :usuario and ambito = 'PERSONAL' and eliminada_en is null"
+			+ " and (unaccent(lower(titulo)) like unaccent(lower(:patron)) escape '!'"
+			+ " or unaccent(lower(coalesce(descripcion, ''))) like unaccent(lower(:patron)) escape '!')"
+			+ " order by (estado = 'FINALIZADA'), actualizada_en desc limit :limite", nativeQuery = true)
+	List<Tarea> buscar(@Param("usuario") UUID usuarioId, @Param("patron") String patron, @Param("limite") int limite);
+
 	// ---------- Papelera: consultas nativas, porque la entidad oculta las eliminadas ----------
 
 	@Query(value = "select * from tarea where usuario_id = :usuario and ambito = 'PERSONAL'"

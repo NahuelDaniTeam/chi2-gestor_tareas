@@ -1,5 +1,6 @@
 package com.chi2.tareas.tarea;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ import jakarta.validation.constraints.Size;
  *                        Si falta y el plazo la exige, se usa hoy. Sin plazo se ignora.
  * @param prioridad si falta, {@link Prioridad#POR_DEFECTO}
  * @param proyectoId opcional; tiene que ser un proyecto del usuario
+ * @param repeticion si falta, no se repite
+ * @param recordatorio momento del aviso, opcional
  */
 public record TareaRequest(
 
@@ -31,12 +34,17 @@ public record TareaRequest(
 
 		Prioridad prioridad,
 
-		UUID proyectoId) {
+		UUID proyectoId,
+
+		Repeticion repeticion,
+
+		Instant recordatorio) {
 
 	public TareaRequest {
 		titulo = titulo == null ? null : titulo.strip();
 		descripcion = descripcion == null || descripcion.isBlank() ? null : descripcion.strip();
 		prioridad = prioridad == null ? Prioridad.POR_DEFECTO : prioridad;
+		repeticion = repeticion == null ? Repeticion.NINGUNA : repeticion;
 	}
 
 }

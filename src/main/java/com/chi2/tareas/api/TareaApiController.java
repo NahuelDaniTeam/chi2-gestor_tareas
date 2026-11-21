@@ -75,6 +75,24 @@ public class TareaApiController {
 		return service.sinPlazo(new FiltroTareas(prioridad, estado, proyecto));
 	}
 
+	/** Buscador: hasta 30 tareas cuyo título o descripción contienen {@code q} (sin distinguir tildes). */
+	@GetMapping("/buscar")
+	public List<TareaResponse> buscar(@RequestParam(defaultValue = "") String q) {
+		return service.buscar(q);
+	}
+
+	/** Recordatorios que ya llegaron y no se avisaron. */
+	@GetMapping("/recordatorios")
+	public List<TareaResponse> recordatoriosPendientes() {
+		return service.recordatoriosPendientes();
+	}
+
+	@PostMapping("/{id}/recordatorio/avisado")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void recordatorioAvisado(@PathVariable UUID id) {
+		service.marcarRecordatorioAvisado(id);
+	}
+
 	@GetMapping("/{id}")
 	public TareaResponse obtener(@PathVariable UUID id) {
 		return service.obtener(id);

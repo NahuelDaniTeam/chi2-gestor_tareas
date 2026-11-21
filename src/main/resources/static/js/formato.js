@@ -16,6 +16,10 @@ export const HORIZONTES = Object.freeze({
 	SIN_PLAZO: "Sin plazo", DIA: "Día", SEMANA: "Semana", MES: "Mes", LIMITE: "Fecha límite"
 });
 export const ESTADOS = Object.freeze({ PENDIENTE: "Pendiente", EN_CURSO: "En curso", FINALIZADA: "Finalizada" });
+export const REPETICIONES = Object.freeze({
+	NINGUNA: "No se repite", DIARIA: "Todos los días", HABILES: "Días hábiles", SEMANAL: "Cada semana", MENSUAL: "Cada mes"
+});
+const HORA = new Intl.DateTimeFormat(LOCALE, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 // ---------- Fechas ISO ----------
 
@@ -178,6 +182,27 @@ export function agrupar(tareas, vista) {
 	return [...grupos.keys()].sort().map(clave => ({ clave, titulo: tituloDe(clave), tareas: grupos.get(clave) }));
 }
 
+// ---------- Recordatorios ----------
+
+/** Instante de la API → valor de un input datetime-local ("2026-11-19T13:00"), en hora local. */
+export function aDatetimeLocal(instante) {
+	if (!instante) return "";
+	const f = new Date(instante);
+	const dos = n => String(n).padStart(2, "0");
+	return `${isoLocal(f)}T${dos(f.getHours())}:${dos(f.getMinutes())}`;
+}
+
+/** Valor de un input datetime-local → instante para la API (o null). */
+export function desdeDatetimeLocal(valor) {
+	return valor ? new Date(valor).toISOString() : null;
+}
+
+/** "13:00" si es hoy; si no, "19 nov, 13:00". */
+export function textoRecordatorio(instante, hoy) {
+	const f = new Date(instante);
+	return isoLocal(f) === hoy ? HORA.format(f) : momento(instante);
+}
+
 // ---------- Dónde quedó una tarea ----------
 
 /** Vista donde se ve una tarea (para el enlace "Ver" después de crearla en otra vista). */
@@ -188,6 +213,12 @@ export function rutaDeTarea({ horizonte, fechaReferencia }, hoy) {
 		case "MES": return `/mes?fecha=${fechaReferencia}`;
 		default: return fechaReferencia === hoy ? "/" : `/semana?fecha=${fechaReferencia}`;
 	}
+}
+
+/** La ruta de su vista, con la orden de abrirla en el panel (buscador, recordatorios). */
+export function rutaParaAbrir(tarea, hoy) {
+	const ruta = rutaDeTarea(tarea, hoy);
+	return ruta + (ruta.includes("?") ? "&" : "?") + "tarea=" + tarea.id;
 }
 
 /** "Hoy", "Por planificar", "la semana del 16 nov", "Noviembre de 2026", "Mar 24 nov". */

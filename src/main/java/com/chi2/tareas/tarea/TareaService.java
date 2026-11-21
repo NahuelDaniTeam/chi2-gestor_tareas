@@ -99,11 +99,42 @@ public class TareaService {
 		return mapper.aResponse(tarea, calendario.hoy());
 	}
 
+	/** Al finalizar una tarea que se repite, crea la siguiente (§4.9). */
 	@Transactional
 	public TareaResponse cambiarEstado(UUID id, EstadoTarea estado) {
 		Tarea tarea = buscar(id);
 		tarea.cambiarEstado(estado, clock.instant());
+		tarea.crearSiguiente(clock.instant()).ifPresent(repository::save);
 		return mapper.aResponse(tarea, calendario.hoy());
+	}
+
+	// ---------- Buscador (§4.11) ----------
+
+	private static final int MAXIMO_RESULTADOS = 30;
+
+	public List<TareaResponse> buscar(String texto) {
+		String limpio = texto == null ? "" : texto.strip();
+		if (limpio.isEmpty()) {
+			return List.of();
+		}
+		String patron = "%" + limpio.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+		LocalDate hoy = calendario.hoy();
+		return repository.buscar(usuario.id(), patron, MAXIMO_RESULTADOS).stream()
+				.map(t -> mapper.aResponse(t, hoy)).toList();
+	}
+
+	// ---------- Recordatorios (§4.10) ----------
+
+	public List<TareaResponse> recordatoriosPendientes() {
+		LocalDate hoy = calendario.hoy();
+		return repository.findByUsuarioIdAndAmbitoAndRecordatorioLessThanEqualAndRecordatorioAvisadoFalseAndEstadoNot(
+				usuario.id(), Ambito.PERSONAL, clock.instant(), EstadoTarea.FINALIZADA).stream()
+				.map(t -> mapper.aResponse(t, hoy)).toList();
+	}
+
+	@Transactional
+	public void marcarRecordatorioAvisado(UUID id) {
+		buscar(id).marcarRecordatorioAvisado();
 	}
 
 	@Transactional

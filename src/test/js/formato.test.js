@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-	agrupar, diasDeSemana, dondeQuedo, etiquetaFecha, lunesDe, resumen, rutaDeTarea, semanasDelMes, separarFinalizadas
+	aDatetimeLocal, agrupar, desdeDatetimeLocal, diasDeSemana, dondeQuedo, etiquetaFecha, lunesDe, resumen, rutaDeTarea,
+	rutaParaAbrir, semanasDelMes, separarFinalizadas
 } from "../../main/resources/static/js/formato.js";
 
 const HOY = "2026-11-19"; // jueves
@@ -96,4 +97,17 @@ test("una tarea creada en otra vista sabe dónde quedó y cómo llegar", () => {
 	assert.deepEqual([rutaDeTarea(tarea("DIA", "2026-11-24"), HOY), dondeQuedo(tarea("DIA", "2026-11-24"), HOY)],
 		["/semana?fecha=2026-11-24", "Mar 24 nov"]);
 	assert.equal(rutaDeTarea(tarea("LIMITE", HOY), HOY), "/");
+});
+
+test("la ruta para abrir una tarea suma ?tarea= o &tarea= según haga falta", () => {
+	assert.equal(rutaParaAbrir({ id: "x", horizonte: "DIA", fechaReferencia: HOY }, HOY), "/?tarea=x");
+	assert.equal(rutaParaAbrir({ id: "x", horizonte: "SEMANA", fechaReferencia: "2026-11-16" }, HOY), "/semana?fecha=2026-11-16&tarea=x");
+});
+
+test("el recordatorio va y vuelve del input datetime-local sin perder la hora", () => {
+	const instante = "2026-11-19T16:30:00.000Z";
+	assert.equal(desdeDatetimeLocal(aDatetimeLocal(instante)), instante);
+	assert.match(aDatetimeLocal(instante), /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+	assert.equal(aDatetimeLocal(null), "");
+	assert.equal(desdeDatetimeLocal(""), null);
 });

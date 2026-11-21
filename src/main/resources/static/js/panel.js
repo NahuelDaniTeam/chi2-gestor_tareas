@@ -4,8 +4,8 @@
  */
 
 import { api } from "./api.js";
-import { atraparFoco, el, icono } from "./dom.js";
-import { momento } from "./formato.js";
+import { atraparFoco, avisar, el, icono } from "./dom.js";
+import { aDatetimeLocal, desdeDatetimeLocal, dondeQuedo, momento } from "./formato.js";
 
 const ETIQUETA_FECHA = {
 	DIA: "Día",
@@ -53,6 +53,8 @@ export function iniciarPanel(contexto, alCerrar, alEliminar) {
 		campo("horizonte").value = t.horizonte;
 		campo("fechaReferencia").value = t.fechaReferencia || "";
 		campo("proyectoId").value = t.proyectoId || "";
+		campo("repeticion").value = t.repeticion || "NINGUNA";
+		campo("recordatorio").value = aDatetimeLocal(t.recordatorio);
 		ajustarFecha();
 		mostrarMeta();
 		mostrarError(null);
@@ -84,6 +86,10 @@ export function iniciarPanel(contexto, alCerrar, alEliminar) {
 		document.getElementById("p-fecha-label").textContent = ETIQUETA_FECHA[horizonte] ?? "Fecha";
 		document.getElementById("p-fecha-ayuda").textContent = AYUDA_FECHA[horizonte];
 		if (!sinPlazo && !campo("fechaReferencia").value) campo("fechaReferencia").value = tarea?.fechaReferencia || contexto.hoy;
+		// Qué repeticiones admite cada plazo (igual que Repeticion.admite en el backend)
+		const admitidas = { SIN_PLAZO: ["NINGUNA"], SEMANA: ["NINGUNA", "SEMANAL", "MENSUAL"], MES: ["NINGUNA", "MENSUAL"] }[horizonte];
+		for (const opcion of campo("repeticion").options) opcion.disabled = Boolean(admitidas) && !admitidas.includes(opcion.value);
+		if (campo("repeticion").selectedOptions[0]?.disabled) campo("repeticion").value = "NINGUNA";
 	}
 
 	function mostrarMeta() {
@@ -114,7 +120,9 @@ export function iniciarPanel(contexto, alCerrar, alEliminar) {
 			horizonte,
 			fechaReferencia: fecha,
 			prioridad: campo("prioridad").value,
-			proyectoId: campo("proyectoId").value || null
+			proyectoId: campo("proyectoId").value || null,
+			repeticion: horizonte === "SIN_PLAZO" ? "NINGUNA" : campo("repeticion").value,
+			recordatorio: desdeDatetimeLocal(campo("recordatorio").value)
 		};
 	}
 
@@ -136,6 +144,9 @@ export function iniciarPanel(contexto, alCerrar, alEliminar) {
 						? await api.cambiarPlazo(t.id, cuerpo.horizonte, cuerpo.fechaReferencia)
 						: await api.editar(t.id, cuerpo);
 			Object.assign(t, actualizada);
+			if (cambiado === "estado" && t.estado === "FINALIZADA" && t.proximaRepeticion) {
+				avisar(`Se repite: la próxima es ${dondeQuedo({ horizonte: t.horizonte, fechaReferencia: t.proximaRepeticion }, contexto.hoy)}.`);
+			}
 			if (tarea === t) {
 				campo("fechaReferencia").value = t.fechaReferencia || "";
 				mostrarMeta();
@@ -211,7 +222,18 @@ export function iniciarPanel(contexto, alCerrar, alEliminar) {
 	}
 
 	// Selectores, opciones y fecha: al cambiar. Textos: al salir del campo (evento change).
-	for (const nombre of ["estado", "prioridad", "horizonte", "fechaReferencia", "titulo", "descripcion", "proyectoId"]) {
+	campo("recordatorio").addEventListener("change", () => {
+		// El permiso se pide al programar el primero, con un gesto del usuario
+		if (campo("recordatorio").value && "Notification" in window && Notification.permission === "default") {
+			Notification.requestPermission();
+		}
+	});
+	document.getElementById("p-quitar-recordatorio").addEventListener("click", () => {
+		campo("recordatorio").value = "";
+		ultimoGuardado = guardar("recordatorio");
+	});
+
+	for (const nombre of ["estado", "prioridad", "horizonte", "fechaReferencia", "titulo", "descripcion", "proyectoId", "repeticion", "recordatorio"]) {
 		const elementos = form.querySelectorAll(`[name="${nombre}"]`);
 		elementos.forEach(e => e.addEventListener("change", () => {
 			if (nombre === "horizonte") ajustarFecha();
