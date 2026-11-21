@@ -28,6 +28,12 @@ public interface TareaRepository extends JpaRepository<Tarea, UUID> {
 	List<Tarea> findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(UUID usuarioId, Ambito ambito,
 			EstadoTarea estado, LocalDate fecha);
 
+	/** Para las estadísticas: finalizadas desde un momento. */
+	List<Tarea> findByUsuarioIdAndAmbitoAndCompletadaEnGreaterThanEqual(UUID usuarioId, Ambito ambito, Instant desde);
+
+	/** Para las estadísticas: todas las que no están finalizadas. */
+	List<Tarea> findByUsuarioIdAndAmbitoAndEstadoNot(UUID usuarioId, Ambito ambito, EstadoTarea estado);
+
 	/** Recordatorios que ya llegaron y todavía no se avisaron (de tareas sin terminar). */
 	List<Tarea> findByUsuarioIdAndAmbitoAndRecordatorioLessThanEqualAndRecordatorioAvisadoFalseAndEstadoNot(
 			UUID usuarioId, Ambito ambito, Instant momento, EstadoTarea estado);

@@ -4,8 +4,8 @@ Aplicación de uso diario para planificar tareas personales por día, semana, me
 
 Este documento describe la **funcionalidad**. El stack técnico y la estructura del repositorio se toman del proyecto local de CHI2 en Orca (el web principal): si hay diferencias con la sección 8, prevalece el repositorio.
 
-**Estado:** MVP (etapa 1) implementado. Los ajustes hechos al programarlo están en la §12.
-**Última actualización:** 2026-11-19
+**Estado:** etapa 1 implementada, con plazos anidados, proyectos, checklist, papelera, recurrentes, recordatorios, buscador, revisión semanal, estadísticas y modo oscuro. Los ajustes respecto de la especificación original están en la §12.
+**Última actualización:** 2026-11-21
 **Referencias:** `CLAUDE.md` · `PENDIENTES.md`
 
 ---
@@ -135,6 +135,25 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 - También ofrece ir a cada vista, la revisión semanal, las estadísticas y la papelera.
 - Flechas para moverse, Enter para abrir: la tarea se abre en el panel de su vista.
 
+### 4.12 Revisión semanal
+
+- Página `/revision` (menú ⋯ o el buscador) en tres pasos: **lo que quedó pendiente** (vencidas: hoy, mañana, esta semana, la próxima, sin plazo, finalizar o papelera), **por planificar** (hoy, esta semana, la próxima o este mes) y **la semana que viene** (para mirar, con enlace al calendario).
+- Cada tarea se resuelve con un clic y sale de la lista; el aviso ofrece deshacer.
+- "Terminé la revisión" guarda la fecha en el navegador.
+- En Hoy aparece una sugerencia discreta cuando hay vencidas o tareas sin plazo y no se hizo la revisión en 7 días, o es lunes y todavía no se hizo ese día. Se puede descartar por el día.
+
+### 4.13 Modo oscuro
+
+- Tema **Sistema** (por defecto: sigue al sistema operativo), **Claro** u **Oscuro**, desde el menú ⋯. Se recuerda en el navegador y se aplica antes de pintar, sin parpadeo.
+- Son los mismos tokens de color con valores oscuros; el acento se aclara un poco para mantener el contraste.
+
+### 4.14 Estadísticas
+
+- Página `/estadisticas`: finalizadas esta semana (y la diferencia con la anterior), racha de días seguidos terminando algo (si hoy todavía no se terminó nada, la de ayer sigue en pie), pendientes y vencidas.
+- Gráfico de barras de las finalizadas por semana (últimas 8), con el valor de la semana actual escrito, detalle al pasar el mouse o el foco, y la misma información como tabla.
+- Por proyecto: finalizadas en los últimos 30 días y pendientes.
+- El color de las barras está validado contra las superficies clara y oscura (contraste y luminosidad).
+
 ## 5. Etapa 2: grupos (después del MVP personal)
 
 - Un usuario puede **crear grupos** (por ejemplo, "Tesis") e invitar a otros usuarios.
@@ -224,7 +243,9 @@ Endpoints del MVP:
 | `GET /api/tareas/recordatorios` | Recordatorios que ya llegaron y no se avisaron. | 200 |
 | `POST /api/tareas/{id}/recordatorio/avisado` | Marca el recordatorio como avisado. | 204 / 404 |
 
-El alta y la edición aceptan `repeticion` (`NINGUNA`, `DIARIA`, `HABILES`, `SEMANAL`, `MENSUAL`) y `recordatorio` (instante ISO); la respuesta suma `proximaRepeticion`. `DELETE /api/tareas/{id}` manda la tarea a la papelera. Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
+El alta y la edición aceptan `repeticion` (`NINGUNA`, `DIARIA`, `HABILES`, `SEMANAL`, `MENSUAL`) y `recordatorio` (instante ISO); la respuesta suma `proximaRepeticion`. | `GET /api/estadisticas` | Números de la §4.14. | 200 |
+
+`DELETE /api/tareas/{id}` manda la tarea a la papelera. Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
 
 Los errores vuelven como `ProblemDetail`; los de validación, con un mapa `errores` por campo. Una tarea de otro usuario responde 404, igual que una inexistente.
 

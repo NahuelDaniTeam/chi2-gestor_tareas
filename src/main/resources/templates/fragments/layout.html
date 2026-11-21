@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title th:text="${titulo} + ' · Tareas CHI2'">Tareas CHI2</title>
 	<meta name="theme-color" content="#f7f4ee">
+	<!-- Tema elegido (claro u oscuro) antes de pintar, para que no parpadee; sin elección, sigue al sistema -->
+	<script>try { var tema = localStorage.getItem("chi2-tareas-tema"); if (tema === "claro" || tema === "oscuro") document.documentElement.dataset.tema = tema; } catch (e) {}</script>
 	<link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
 	<link rel="apple-touch-icon" th:href="@{/apple-touch-icon.png}">
 	<link rel="manifest" th:href="@{/site.webmanifest}">
@@ -60,9 +62,23 @@
 				<svg th:replace="~{fragments/layout :: icono('puntos', 'size-4')}"></svg>
 			</summary>
 			<div class="menu-contenido">
+				<a th:href="@{/revision}" class="menu-opcion">
+					<svg th:replace="~{fragments/layout :: icono('revision', 'size-4')}"></svg>Revisión semanal
+				</a>
+				<a th:href="@{/estadisticas}" class="menu-opcion">
+					<svg th:replace="~{fragments/layout :: icono('grafico', 'size-4')}"></svg>Estadísticas
+				</a>
 				<a th:href="@{/papelera}" class="menu-opcion">
 					<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Papelera
 				</a>
+				<div class="mt-1 border-t border-linea px-2.5 pt-2.5 pb-1">
+					<p class="mb-2 text-xs text-tenue">Tema</p>
+					<div class="segmentado segmentado-ancho segmentado-chico" role="group" aria-label="Tema">
+						<button type="button" data-tema="sistema">Sistema</button>
+						<button type="button" data-tema="claro"><svg th:replace="~{fragments/layout :: icono('sol', 'size-3.5')}"></svg>Claro</button>
+						<button type="button" data-tema="oscuro"><svg th:replace="~{fragments/layout :: icono('luna', 'size-3.5')}"></svg>Oscuro</button>
+					</div>
+				</div>
 			</div>
 		</details>
 	</nav>
@@ -80,6 +96,7 @@
 	</dialog>
 	<script type="module" th:src="@{/js/buscador.js}"></script>
 	<script type="module" th:src="@{/js/recordatorios.js}"></script>
+	<script type="module" th:src="@{/js/tema.js}"></script>
 </header>
 
 </body>

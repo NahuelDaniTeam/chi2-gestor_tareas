@@ -40,17 +40,30 @@ _(nada por ahora)_
 
 ### 4. Definir si la aplicación se inicia sola al prender la computadora
 - **Contexto:** hoy se abre con `scripts/abrir-tareas.cmd` (o el acceso directo que crea `scripts/crear-acceso-directo.ps1`): si la app no está corriendo, la levanta y abre el navegador. Necesita Docker Desktop abierto, porque la base es Postgres en Docker. Para que arranque sola alcanzaría con poner ese acceso directo en la carpeta de Inicio de Windows (`shell:startup`) y que Docker Desktop también inicie con Windows.
+- **Novedad (2026-11-21):** los recordatorios solo avisan si hay alguna página de la app abierta; con el inicio automático, más la app instalada desde Chrome o Edge, los avisos llegarían siempre que la PC esté prendida.
 - **Qué entregar:** sí o no. Si es sí, Claude agrega la opción al script.
 - **Dónde:** `README.md` y `scripts/`.
 - cargado por Nahuel, 2026-11-19
 
 ### 7. Probar el arrastre y el alta rápida en dos navegadores
 - **Contexto:** la especificación pide una prueba manual en al menos dos navegadores (§9). Claude la probó en Chrome.
-- **Qué entregar:** probar en Edge o Firefox: alta con Enter y atajos, arrastre entre columnas, edición en el panel y eliminación. Anotar lo que falle.
+- **Qué entregar:** probar en Edge o Firefox: alta con Enter y atajos, arrastre entre columnas y en los calendarios de Semana y Mes, edición en el panel, papelera con deshacer, buscador (Ctrl+K) y recordatorios. Mirar también cómo se ve en el celular (Claude no pudo achicar la ventana para verlo). Anotar lo que falle.
 - **Dónde:** contárselo a Claude o anotarlo acá.
 - cargado por Nahuel, 2026-11-19
 
 ## Para los dos
+
+### 10. Decidir las mejoras técnicas que siguen
+- **Contexto:** de las ideas para profesionalizar el proyecto (2026-11-19), Nahuel eligió hacer primero las 9 de producto, que ya están hechas. Quedaron sin decidir las técnicas, que son las que hacen que el proyecto "se vea profesional" desde afuera:
+  1. **CI en GitHub Actions:** que cada PR corra `./mvnw verify` (tests de Java con Testcontainers y de JavaScript) y proteger `main`.
+  2. **Tests de punta a punta con Playwright** en Chrome y Firefox (alta, arrastre, panel, buscador); también cubriría el pendiente 7 y la vista de celular.
+  3. **Documentación de la API con OpenAPI/Swagger** (springdoc), pensando en la app nativa.
+  4. **Backups automáticos de la base** (hoy vive en un volumen de Docker local) y exportar a CSV o JSON.
+  5. **Versionado con CHANGELOG y releases.**
+  6. **Auditoría de accesibilidad** (axe o Lighthouse).
+- **Qué entregar:** cuáles van y en qué orden.
+- **Dónde:** contárselo a Claude, que lo arma en ramas separadas.
+- cargado por Nahuel, 2026-11-21
 
 ### 5. Bocetar en Figma la pantalla Hoy y el tablero
 - **Contexto:** la regla de CHI2 es diseñar en Figma antes de codificar las pantallas definitivas. El MVP ya está hecho con el estilo del web principal (marfil, tinta, acento terracota, Instrument Serif e Inter), así que el boceto puede partir de capturas de lo que hay.
@@ -80,5 +93,6 @@ _(nada por ahora)_
 
 ## Hechos
 
+- [x] Ideas de producto 1 a 9, pedidas por Nahuel: plazos anidados (Por planificar, calendarios de semana y mes, Largo plazo por meses), proyectos con filtro, checklist, papelera con deshacer (Ctrl+Z), buscador (Ctrl+K), tareas recurrentes, recordatorios con notificación, revisión semanal, estadísticas y modo oscuro. Detalle en `docs/01-especificacion.md` §4.1 a §4.14. 100 tests de Java y 24 de JavaScript. · 2026-11-21
 - [x] Terminación profesional de la interfaz: íconos propios, controles segmentados, finalizadas plegables, estados de carga y error, contador en Hoy, atajos globales con ayuda (`?`), página de error propia y JavaScript en módulos con tests (`node --test` dentro de `./mvnw verify`). · 2026-11-19
 - [x] MVP del gestor (etapa 1): tareas con horizonte, prioridad y estado; vistas Hoy, Semana, Mes y Largo plazo; lista y tablero con arrastre; alta rápida con atajos; panel de edición; API REST completa; 57 tests (unitarios, controladores e integración con Postgres). Ajustes respecto de la especificación en `docs/01-especificacion.md` §12. · 2026-11-19

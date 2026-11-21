@@ -10,6 +10,7 @@ import { avisar, guardarPreferencia, leerPreferencia } from "./dom.js";
 import { dondeQuedo, isoLocal, resumen } from "./formato.js";
 import { iniciarPanel } from "./panel.js";
 import { iniciarProyectos } from "./proyectos.js";
+import { CLAVE_REVISION, convieneRevisar } from "./revision-aviso.js";
 import { dibujar, habilitarArrastre } from "./render.js";
 
 const raiz = document.getElementById("app");
@@ -79,11 +80,26 @@ async function actualizarContadores() {
 		mostrarContador("[data-contador-hoy]", abiertas(deHoy));
 		mostrarContador("[data-contador-sin-plazo]", abiertas(sinPlazo));
 		const pendientesHoy = abiertas(deHoy);
+		sugerirRevision(deHoy.filter(t => t.vencida).length + abiertas(sinPlazo));
 		document.title = (pendientesHoy ? `(${pendientesHoy}) ` : "") + TITULO;
 	} catch {
 		// los contadores son accesorios: si fallan, la vista ya muestra el problema
 	}
 }
+
+/** En Hoy, un aviso discreto para hacer la revisión semanal cuando corresponde. */
+function sugerirRevision(pendientes) {
+	const banda = document.getElementById("sugerir-revision");
+	if (!banda) return;
+	const descartada = leerPreferencia("chi2-tareas-revision-descartada", "") === contexto.hoy;
+	banda.hidden = descartada || !convieneRevisar(leerPreferencia(CLAVE_REVISION, null), new Date(), pendientes);
+	banda.querySelector("[data-cuantas]").textContent = pendientes === 1 ? "1 tarea" : `${pendientes} tareas`;
+}
+
+document.querySelector("#sugerir-revision [data-descartar]")?.addEventListener("click", () => {
+	guardarPreferencia("chi2-tareas-revision-descartada", contexto.hoy);
+	document.getElementById("sugerir-revision").hidden = true;
+});
 
 function mostrarContador(selector, cantidad) {
 	const contador = document.querySelector(selector);

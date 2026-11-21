@@ -329,6 +329,28 @@ class TareaIntegracionTest {
 	}
 
 	@Test
+	void lasEstadisticasCuentanFinalizadasPendientesVencidasYRacha() throws Exception {
+		String ayer = crear("Ayer", "DIA", "2026-11-18", "MEDIA");
+		reloj.fijar(AHORA.minus(Duration.ofDays(1)));
+		cambiarEstado(ayer, "FINALIZADA");
+		reloj.fijar(AHORA);
+		cambiarEstado(crear("Hoy", "DIA", "2026-11-19", "MEDIA"), "FINALIZADA");
+		crear("Vencida", "DIA", "2026-11-10", "ALTA");
+		crear("Sin plazo", "SIN_PLAZO", null, "MEDIA");
+
+		mvc.perform(get("/api/estadisticas"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.completadasEstaSemana").value(2))
+				.andExpect(jsonPath("$.rachaDias").value(2))
+				.andExpect(jsonPath("$.pendientes").value(2))
+				.andExpect(jsonPath("$.vencidas").value(1))
+				.andExpect(jsonPath("$.porSemana.length()").value(8))
+				.andExpect(jsonPath("$.porSemana[7].lunes").value("2026-11-16"))
+				.andExpect(jsonPath("$.porProyecto[0].nombre").value("Sin proyecto"))
+				.andExpect(jsonPath("$.porProyecto[0].completadas30Dias").value(2));
+	}
+
+	@Test
 	void elChecklistSeAgregaTildaEditaYBorra() throws Exception {
 		String id = crear("Capítulo 2", "SEMANA", "2026-11-19", "ALTA");
 

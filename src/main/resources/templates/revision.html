@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Revisión semanal')}"></head>
+<body class="bg-fondo font-sans text-tinta antialiased">
+<header th:replace="~{fragments/layout :: encabezado}"></header>
+
+<main id="revision" class="contenedor pb-28"
+      th:data-hoy="${hoy}" th:data-manana="${manana}"
+      th:data-proxima-desde="${proximaSemana.rango().desde()}" th:data-proxima-hasta="${proximaSemana.rango().hasta()}">
+	<section class="pt-10 pb-8 sm:pt-14">
+		<p class="etiqueta">Revisión semanal</p>
+		<h1 class="titulo-display mt-4 text-[2.75rem] sm:text-6xl">Ordená la semana</h1>
+		<p class="mt-4 max-w-xl text-tenue">Tres pasos cortos: decidir qué hacer con lo que quedó pendiente, darle plazo a lo que no tiene y mirar lo que viene.</p>
+	</section>
+
+	<ol class="flex flex-col gap-12">
+		<li>
+			<h2 class="paso-revision"><span>1</span>Lo que quedó pendiente <span class="contador-paso" data-cuenta="vencidas"></span></h2>
+			<p class="mt-1 text-sm text-tenue">Tareas vencidas sin terminar: reprogramalas, finalizalas o mandalas a la papelera.</p>
+			<ul id="vencidas" class="lista-revision mt-4"></ul>
+		</li>
+		<li>
+			<h2 class="paso-revision"><span>2</span>Por planificar <span class="contador-paso" data-cuenta="sin-plazo"></span></h2>
+			<p class="mt-1 text-sm text-tenue">Tareas sin plazo: elegí cuándo las vas a hacer.</p>
+			<ul id="sin-plazo" class="lista-revision mt-4"></ul>
+		</li>
+		<li>
+			<h2 class="paso-revision"><span>3</span>La semana que viene</h2>
+			<p class="mt-1 text-sm text-tenue">
+				<span th:text="${proximaSemana.titulo()}">Del 23 al 29 de noviembre</span> ·
+				<a th:href="@{${urlProximaSemana}}" class="underline decoration-linea underline-offset-4 hover:decoration-acento">ver en el calendario</a>
+			</p>
+			<ul id="proxima" class="lista-revision mt-4"></ul>
+		</li>
+	</ol>
+
+	<div class="mt-14 flex flex-wrap items-center gap-4 border-t border-linea pt-8">
+		<button id="terminar" type="button" class="boton-principal inline-flex px-4 py-2">
+			<svg th:replace="~{fragments/layout :: icono('check', 'size-4')}"></svg>Terminé la revisión
+		</button>
+		<p id="ultima-revision" class="text-sm text-tenue"></p>
+	</div>
+</main>
+
+<div id="aviso" class="aviso" role="status" hidden></div>
+<script type="module" th:src="@{/js/revision.js}"></script>
+</body>
+</html>

@@ -2,8 +2,8 @@
 
 Módulo de CHI2 para planificar tareas personales por día, semana, mes y largo plazo, con prioridades y tablero. Se abre desde la computadora sin pasos extra. Primero es de uso personal; después suma grupos con tareas compartidas (por ejemplo, el equipo de la tesis).
 
-**Estado:** MVP (etapa 1, uso personal) implementado. Falta confirmar las propuestas de `PENDIENTES.md`.
-**Última actualización:** 2026-11-19
+**Estado:** etapa 1 (uso personal) implementada y ampliada (proyectos, checklist, papelera, recurrentes, recordatorios, buscador, revisión semanal, estadísticas, modo oscuro). Falta confirmar las propuestas de `PENDIENTES.md`.
+**Última actualización:** 2026-11-21
 
 **Documento de referencia:** `docs/01-especificacion.md` (funcionalidad, modelo de datos, API y ajustes hechos al programar). Todo lo que se construya tiene que respetarlo; si este archivo y ese documento se contradicen, manda el documento y se corrige este archivo.
 
@@ -68,6 +68,7 @@ src/main/java/com/chi2/tareas/
 ├── usuario/                   UsuarioActual: quién usa la app (etapa 1: UsuarioLocal, sin login)
 ├── tarea/                     tareas: dominio, plazos (Rango), calendario, service, repository, páginas (docs/01)
 ├── proyecto/                  proyectos o etiquetas de las tareas (§4.6)
+├── estadistica/               estadísticas (§4.14): cálculo puro, service y página
 └── api/                       @RestController bajo /api/... y su manejo de errores
 src/main/resources/
 ├── templates/                 vistas Thymeleaf (fragments/layout.html = piezas compartidas)
@@ -80,7 +81,7 @@ src/test/js/                   tests de los módulos de static/js sin DOM (node 
 
 - Una funcionalidad nueva va en su propio paquete con sus capas (ver "Arquitectura en capas"); su `@RestController` va en `api/`. La etapa 2 suma el paquete `grupo/`.
 - `templates/fragments/layout.html` tiene las piezas compartidas: `head(titulo)`, `icono(nombre, clase)`, `isotipo(clase)`, `logo` y `encabezado`.
-- `static/js/`: `app.js` es la entrada; `api.js` habla con `/api/tareas`; `render.js`, `alta.js` y `panel.js` manejan cada parte de la pantalla; `atajos.js` y `formato.js` son lógica pura, sin DOM, y son los que se testean. Las clases de Tailwind se escriben completas (Tailwind las encuentra escaneando los archivos). Nada de `innerHTML` con datos del usuario: siempre `textContent` (helper `el()` de `dom.js`).
+- `static/js/`: `app.js` es la entrada de las vistas; `api.js` habla con la API; `render.js`, `alta.js`, `panel.js` y `proyectos.js` manejan cada parte de la pantalla; `deshacer.js` guarda cómo revertir acciones. En todas las páginas (desde el encabezado) cargan `buscador.js`, `recordatorios.js` y `tema.js`; `papelera.js`, `revision.js` y `estadisticas.js` son la entrada de sus páginas. `atajos.js`, `formato.js` y `revision-aviso.js` son lógica pura, sin DOM, y son los que se testean. Las clases de Tailwind se escriben completas (Tailwind las encuentra escaneando los archivos). Nada de `innerHTML` con datos del usuario: siempre `textContent` (helper `el()` de `dom.js`).
 - Íconos: sprite `static/img/iconos.svg`, desde Thymeleaf con el fragmento `icono(nombre, clase)` y desde JS con `icono()` de `dom.js`. No usar caracteres sueltos (✕, ←) como íconos.
 - `src/main/frontend/main.css` — entrada de Tailwind v4; los tokens de marca van en el bloque `@theme`. El CSS compilado (`static/css/main.css`) se genera en el build y **no se commitea**.
 - `src/main/resources/db/migration/` — migraciones Flyway `V<n>__descripcion.sql`. **Nunca editar una migración ya mergeada a `main`**; crear una nueva. Si los dos crean la misma versión `V<n>` en ramas distintas, quien mergea segundo renumera la suya.

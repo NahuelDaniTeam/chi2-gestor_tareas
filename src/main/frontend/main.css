@@ -9,6 +9,7 @@
  * PENDIENTES.md 10). Si cambian en el web, se copian acá (PENDIENTES.md 6 de este repo).
  */
 @theme {
+  --color-serie: #b5532c;        /* barras de los gráficos (validado contra la superficie clara) */
   --color-fondo: #f7f4ee;        /* marfil */
   --color-superficie: #fffdf9;   /* tarjetas */
   --color-tinta: #191714;        /* texto principal */
@@ -18,6 +19,33 @@
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+}
+
+/*
+ * Modo oscuro (§4.13): los mismos tokens con valores oscuros. Se activa con data-tema="oscuro"
+ * o, si no se eligió tema, cuando el sistema está en oscuro. El acento se aclara un poco para que contraste.
+ */
+:root[data-tema="oscuro"] {
+  --color-fondo: #161412;
+  --color-superficie: #1f1c19;
+  --color-tinta: #ece6dc;
+  --color-tenue: #a39b8f;
+  --color-linea: #35302a;
+  --color-acento: #d97a52;
+  --color-serie: #cf6f47;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --color-fondo: #161412;
+    --color-superficie: #1f1c19;
+    --color-tinta: #ece6dc;
+    --color-tenue: #a39b8f;
+    --color-linea: #35302a;
+    --color-acento: #d97a52;
+    --color-serie: #cf6f47;
+    color-scheme: dark;
+  }
 }
 
 @layer base {
@@ -373,6 +401,90 @@
     @apply flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-tinta transition hover:bg-linea/60;
   }
 
+  /* ---------- Revisión semanal ---------- */
+
+  .paso-revision {
+    @apply flex items-center gap-3 font-display text-3xl;
+  }
+  .paso-revision > span:first-child {
+    @apply inline-flex size-7 items-center justify-center rounded-full bg-linea font-sans text-sm font-medium;
+  }
+  .contador-paso {
+    @apply font-sans text-sm text-tenue tabular-nums;
+  }
+  .lista-revision {
+    @apply divide-y divide-linea overflow-hidden rounded-xl border border-linea bg-superficie;
+  }
+  .fila-revision {
+    @apply flex flex-wrap items-center justify-between gap-3 px-5 py-3.5;
+  }
+
+  /* Veladuras de panel y diálogos: oscuras en los dos temas */
+  .velo {
+    background: rgb(10 9 8 / 0.3);
+  }
+
+  /* ---------- Estadísticas ---------- */
+
+  .dato {
+    @apply bg-superficie p-5 sm:p-6;
+  }
+  .dato-rotulo {
+    @apply text-sm text-tenue;
+  }
+  .dato-valor {
+    @apply mt-2 font-display text-5xl leading-none tabular-nums;
+  }
+  .dato-nota {
+    @apply mt-2 text-xs text-tenue;
+  }
+  .grilla {
+    stroke: var(--color-linea);
+    stroke-width: 1;
+  }
+  .eje {
+    stroke: var(--color-tenue);
+    stroke-opacity: 0.5;
+    stroke-width: 1;
+  }
+  .eje-texto {
+    fill: var(--color-tenue);
+    font-size: 11px;
+  }
+  .valor-texto {
+    fill: var(--color-tinta);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .barra {
+    fill: var(--color-serie);
+  }
+  .barra-zona {
+    fill: transparent;
+  }
+  .barra-grupo {
+    outline: none;
+  }
+  .barra-grupo.activa .barra-zona {
+    fill: var(--color-linea);
+    fill-opacity: 0.45;
+  }
+  .tooltip-grafico {
+    @apply pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+10px)] rounded-lg border border-linea bg-superficie px-3 py-2 text-sm whitespace-nowrap shadow-lg;
+  }
+  .tabla {
+    @apply w-full text-sm;
+  }
+  .tabla th {
+    @apply border-b border-linea px-4 py-2.5 text-left font-medium text-tenue;
+  }
+  .tabla td {
+    @apply border-b border-linea px-4 py-2.5;
+  }
+  .tabla tr:last-child td {
+    @apply border-b-0;
+  }
+
   /* ---------- Carga ---------- */
 
   .esqueleto {
@@ -391,7 +503,7 @@
   /* ---------- Diálogo y avisos ---------- */
 
   .dialogo {
-    @apply m-auto w-[min(40rem,calc(100vw-2rem))] rounded-2xl border border-linea bg-fondo p-0 text-tinta shadow-2xl backdrop:bg-tinta/30;
+    @apply m-auto w-[min(40rem,calc(100vw-2rem))] rounded-2xl border border-linea bg-fondo p-0 text-tinta shadow-2xl backdrop:bg-black/35;
   }
   /* El buscador se abre arriba, como una paleta de comandos */
   .dialogo-arriba {

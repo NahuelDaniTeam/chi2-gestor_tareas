@@ -35,6 +35,7 @@ async function pedir(metodo, url, cuerpo) {
 
 export const api = {
 	listar: url => pedir("GET", url),
+	estadisticas: () => pedir("GET", "/api/estadisticas"),
 	obtener: id => pedir("GET", `/api/tareas/${id}`),
 	buscar: texto => pedir("GET", `/api/tareas/buscar?q=${encodeURIComponent(texto)}`),
 	recordatorios: () => pedir("GET", "/api/tareas/recordatorios"),

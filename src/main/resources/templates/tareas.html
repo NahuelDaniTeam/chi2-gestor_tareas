@@ -75,6 +75,20 @@
 		</div>
 	</form>
 
+	<!-- Sugerencia de revisión semanal (solo en Hoy) -->
+	<div th:if="${vista.name() == 'HOY'}" id="sugerir-revision" class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-linea bg-superficie px-5 py-3.5" hidden>
+		<p class="flex items-center gap-2.5 text-sm">
+			<svg th:replace="~{fragments/layout :: icono('revision', 'size-4 text-acento')}"></svg>
+			Es buen momento para la revisión semanal: hay <span data-cuantas>3 tareas</span> para ordenar.
+		</p>
+		<span class="flex items-center gap-2">
+			<a th:href="@{/revision}" class="boton-secundario">Empezar</a>
+			<button type="button" class="boton-icono" data-descartar aria-label="Ahora no" title="Ahora no">
+				<svg th:replace="~{fragments/layout :: icono('cerrar', 'size-4')}"></svg>
+			</button>
+		</span>
+	</div>
+
 	<!-- Barra de la vista -->
 	<div class="mt-9 flex items-center justify-between gap-4">
 		<div class="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
@@ -138,7 +152,7 @@
 </main>
 
 <!-- Panel lateral de edición: todo se guarda al instante (§3) -->
-<div id="panel-fondo" class="fixed inset-0 z-30 bg-tinta/25" hidden></div>
+<div id="panel-fondo" class="velo fixed inset-0 z-30" hidden></div>
 <aside id="panel" class="panel" role="dialog" aria-modal="true" aria-label="Editar tarea" hidden>
 	<div class="flex items-center justify-between gap-3 border-b border-linea px-6 py-3.5">
 		<span id="panel-guardado" class="inline-flex items-center gap-1.5 text-xs text-tenue" aria-live="polite"></span>
