@@ -32,11 +32,12 @@
 </svg>
 
 <!-- Logo del módulo: χ² | CHI2 · Tareas -->
-<a th:fragment="logo" th:href="@{/}" class="flex shrink-0 items-center gap-3 text-tinta" aria-label="Tareas CHI2, ir a Hoy">
+<a th:fragment="logo" th:href="@{/}" class="flex shrink-0 items-center gap-3 text-tinta" title="Ir a Hoy">
 	<svg th:replace="~{fragments/layout :: isotipo('h-7 w-auto')}"></svg>
 	<span class="h-6 w-px bg-linea" aria-hidden="true"></span>
 	<span class="font-display text-[1.6rem] leading-none tracking-wide">CHI<em class="text-[#a8a29e]">2</em></span>
-	<span class="hidden text-sm text-tenue sm:inline">Tareas</span>
+	<span class="text-sm text-tenue max-sm:sr-only">Tareas</span>
+	<span class="sr-only">, ir a Hoy</span>
 </a>
 
 <!-- Encabezado: marca y vistas de planificación (§4.3) -->

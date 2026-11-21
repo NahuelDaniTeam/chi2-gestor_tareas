@@ -263,17 +263,12 @@ Etapa 2 suma los endpoints de grupos y miembros y el parámetro `ambito` en los 
 
 ## 9. Pruebas
 
-Implementadas (`./mvnw verify`):
+Todas corren en la integración continua (`.github/workflows/ci.yml`) en cada PR:
 
-- Unitarias: cálculo de fecha de referencia y fin de período por horizonte (`HorizonteTest`), qué tareas entran en cada vista (`RangoTest`), transiciones de estado, `completada_en` y vencimiento (`TareaTest`), orden por prioridad (`OrdenTareasTest`), "hoy" en hora argentina y títulos de período (`CalendarioTest`).
-- Navegador (`src/test/js`, `node --test`): atajos del alta rápida, calendario (semanas de un mes), agrupación de la lista, fechas que se muestran, resumen de la vista y separación de finalizadas.
-- Controladores con el service simulado: API (`TareaApiControllerTest`) y páginas (`TareaPaginaControllerTest`).
-- Integración de la API con PostgreSQL real (`TareaIntegracionTest`, Testcontainers): alta rápida, vista Hoy con vencidas, semana, mes, largo plazo, arrastre a finalizada, edición, eliminación y que no se vean tareas de otro usuario.
+- **`./mvnw verify`:** tests unitarios (plazos, rangos, repetición, estadísticas, CSV), de controladores con el service simulado y de integración contra PostgreSQL real (Testcontainers), más los tests de la lógica del navegador con `node --test` (`src/test/js`).
+- **`npm run test:e2e`:** la app real en el navegador con Playwright (`src/test/e2e`), contra un Postgres descartable en el puerto 8090: alta rápida con atajos, aviso de dónde quedó una tarea, arrastre en el tablero y en el calendario, checklist, papelera y deshacer, y buscador, en **Chrome y Firefox**; ancho de celular sin scroll horizontal; y **auditoría de accesibilidad con axe** (WCAG 2.1 AA) en todas las páginas, en tema claro y oscuro, que falla con problemas graves o críticos.
 
-Pendiente:
-
-- Etapa 2: pruebas de permisos (un miembro no ve tareas personales de otro, un `MIEMBRO` no elimina tareas ajenas).
-- Prueba manual del arrastre y del alta rápida en al menos dos navegadores (`PENDIENTES.md` 7).
+Pendiente: etapa 2, pruebas de permisos (un miembro no ve tareas personales de otro, un `MIEMBRO` no elimina tareas ajenas).
 
 ## 10. Decisiones tomadas
 

@@ -45,25 +45,19 @@ _(nada por ahora)_
 - **Dónde:** `README.md` y `scripts/`.
 - cargado por Nahuel, 2026-11-19
 
-### 7. Probar el arrastre y el alta rápida en dos navegadores
-- **Contexto:** la especificación pide una prueba manual en al menos dos navegadores (§9). Claude la probó en Chrome.
-- **Qué entregar:** probar en Edge o Firefox: alta con Enter y atajos, arrastre entre columnas y en los calendarios de Semana y Mes, edición en el panel, papelera con deshacer, buscador (Ctrl+K) y recordatorios. Mirar también cómo se ve en el celular (Claude no pudo achicar la ventana para verlo). Anotar lo que falle.
-- **Dónde:** contárselo a Claude o anotarlo acá.
-- cargado por Nahuel, 2026-11-19
+### 11. Proteger `main` en GitHub
+- **Contexto:** ya hay integración continua (`.github/workflows/ci.yml`): cada PR corre el build con todos los tests (**"Build y tests (Java + JS)"**) y los de punta a punta (**"Punta a punta (Playwright)"**). Para que nada entre a `main` sin pasar por ahí hay que activar la protección de la rama, y eso solo lo puede hacer alguien con permiso de administrador en el repo (Claude no tiene sesión de GitHub en la PC).
+- **Qué entregar:** en GitHub, *Settings → Branches → Add branch ruleset* (o *Branch protection rules*) para `main`: exigir PR antes de mergear, exigir que pasen los dos checks de arriba y bloquear los force push.
+- **Dónde:** configuración del repo `NahuelDaniTeam/chi2-gestor_tareas` en GitHub.
+- cargado por Nahuel, 2026-11-21
+
+### 12. Credenciales de Google, si querés la sincronización con Google Calendar
+- **Contexto:** Nahuel preguntó por integrar Google Calendar. Está analizada en `docs/02-integraciones.md` (puntos 1 y 2). La exportación `.ics` no necesita nada; la **sincronización** (un calendario "CHI2 Tareas" en tu Google que se actualiza solo) necesita un proyecto en Google Cloud con credenciales OAuth, que tiene que crear el dueño de la cuenta.
+- **Qué entregar:** seguir los 5 pasos de `docs/02-integraciones.md` §2 y avisarle a Claude que las variables `CHI2_GOOGLE_CLIENTE_ID` y `CHI2_GOOGLE_CLIENTE_SECRETO` ya están cargadas en Windows. Las credenciales no se pegan en el chat ni van al repo.
+- **Dónde:** Google Cloud Console y variables de entorno de Windows.
+- cargado por Nahuel, 2026-11-21
 
 ## Para los dos
-
-### 10. Decidir las mejoras técnicas que siguen
-- **Contexto:** de las ideas para profesionalizar el proyecto (2026-11-19), Nahuel eligió hacer primero las 9 de producto, que ya están hechas. Quedaron sin decidir las técnicas, que son las que hacen que el proyecto "se vea profesional" desde afuera:
-  1. **CI en GitHub Actions:** que cada PR corra `./mvnw verify` (tests de Java con Testcontainers y de JavaScript) y proteger `main`.
-  2. **Tests de punta a punta con Playwright** en Chrome y Firefox (alta, arrastre, panel, buscador); también cubriría el pendiente 7 y la vista de celular.
-  3. **Documentación de la API con OpenAPI/Swagger** (springdoc), pensando en la app nativa.
-  4. **Backups automáticos de la base** (hoy vive en un volumen de Docker local) y exportar a CSV o JSON.
-  5. **Versionado con CHANGELOG y releases.**
-  6. **Auditoría de accesibilidad** (axe o Lighthouse).
-- **Qué entregar:** cuáles van y en qué orden.
-- **Dónde:** contárselo a Claude, que lo arma en ramas separadas.
-- cargado por Nahuel, 2026-11-21
 
 ### 5. Bocetar en Figma la pantalla Hoy y el tablero
 - **Contexto:** la regla de CHI2 es diseñar en Figma antes de codificar las pantallas definitivas. El MVP ya está hecho con el estilo del web principal (marfil, tinta, acento terracota, Instrument Serif e Inter), así que el boceto puede partir de capturas de lo que hay.
@@ -93,6 +87,7 @@ _(nada por ahora)_
 
 ## Hechos
 
+- [x] Mejoras técnicas (pendiente 10): CI en GitHub Actions, tests de punta a punta con Playwright en Chrome, Firefox y celular (cubre el pendiente 7), auditoría de accesibilidad con axe en tema claro y oscuro (se corrigieron el nombre accesible del logo y tres problemas de contraste), documentación OpenAPI en `/api/docs`, respaldos automáticos y exportación CSV/JSON, scripts de respaldo de la base y `CHANGELOG.md`. Además, `docs/02-integraciones.md` con las integraciones hechas y recomendadas. · 2026-11-21
 - [x] Ideas de producto 1 a 9, pedidas por Nahuel: plazos anidados (Por planificar, calendarios de semana y mes, Largo plazo por meses), proyectos con filtro, checklist, papelera con deshacer (Ctrl+Z), buscador (Ctrl+K), tareas recurrentes, recordatorios con notificación, revisión semanal, estadísticas y modo oscuro. Detalle en `docs/01-especificacion.md` §4.1 a §4.14. 100 tests de Java y 24 de JavaScript. · 2026-11-21
 - [x] Terminación profesional de la interfaz: íconos propios, controles segmentados, finalizadas plegables, estados de carga y error, contador en Hoy, atajos globales con ayuda (`?`), página de error propia y JavaScript en módulos con tests (`node --test` dentro de `./mvnw verify`). · 2026-11-19
 - [x] MVP del gestor (etapa 1): tareas con horizonte, prioridad y estado; vistas Hoy, Semana, Mes y Largo plazo; lista y tablero con arrastre; alta rápida con atajos; panel de edición; API REST completa; 57 tests (unitarios, controladores e integración con Postgres). Ajustes respecto de la especificación en `docs/01-especificacion.md` §12. · 2026-11-19

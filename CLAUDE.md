@@ -5,7 +5,7 @@ Módulo de CHI2 para planificar tareas personales por día, semana, mes y largo 
 **Estado:** etapa 1 (uso personal) implementada y ampliada (proyectos, checklist, papelera, recurrentes, recordatorios, buscador, revisión semanal, estadísticas, modo oscuro). Falta confirmar las propuestas de `PENDIENTES.md`.
 **Última actualización:** 2026-11-21
 
-**Documento de referencia:** `docs/01-especificacion.md` (funcionalidad, modelo de datos, API y ajustes hechos al programar). Todo lo que se construya tiene que respetarlo; si este archivo y ese documento se contradicen, manda el documento y se corrige este archivo.
+**Documentos de referencia:** `docs/01-especificacion.md` (funcionalidad, modelo de datos, API y ajustes hechos al programar) y `docs/02-integraciones.md` (integraciones hechas y recomendadas). Todo lo que se construya tiene que respetarlo; si este archivo y ese documento se contradicen, manda el documento y se corrige este archivo.
 
 **Relación con el resto de CHI2:** es un repositorio aparte del web principal (`workspaces/chi2/general` en Orca), con el mismo stack, la misma marca y las mismas reglas de trabajo. Si el web cambia una convención general (paleta, tipografías, reglas de arquitectura), se copia acá.
 
@@ -53,6 +53,7 @@ Requisitos: Java 21, Docker Desktop **abierto** (la base local y los tests usan 
 | Levantar la app (http://localhost:8082) | `./mvnw spring-boot:run` — arranca Postgres solo vía `compose.yaml` y lo deja corriendo al cerrar |
 | Build completo + todos los tests | `./mvnw verify` |
 | Recompilar CSS mientras se editan plantillas o el JS | `npm run watch:css` (en otra terminal, con la app corriendo) |
+| Tests de punta a punta (Chrome, Firefox, celular y accesibilidad) | `npm run test:e2e` — levanta solo la app de test en el puerto 8090 con su propio Postgres; la primera vez, `npx playwright install chromium firefox` |
 
 ### Estructura y convenciones
 
@@ -78,6 +79,8 @@ src/main/resources/
 src/main/frontend/main.css     entrada de Tailwind (escanea plantillas y JS)
 src/test/java/...              tests, mismo paquete que la clase que prueban
 src/test/js/                   tests de los módulos de static/js sin DOM (node --test)
+src/test/e2e/                  tests de punta a punta con Playwright y auditoría de accesibilidad (axe)
+.github/workflows/ci.yml       integración continua: verify + e2e en cada PR
 ```
 
 - Una funcionalidad nueva va en su propio paquete con sus capas (ver "Arquitectura en capas"); su `@RestController` va en `api/`. La etapa 2 suma el paquete `grupo/`.
@@ -89,7 +92,8 @@ src/test/js/                   tests de los módulos de static/js sin DOM (node 
 - El esquema lo define solo Flyway (`ddl-auto=validate`).
 - La app corre en **UTC** (fechas guardadas en UTC). Qué día es "hoy" se decide con la zona `chi2.tareas.zona` (Argentina) a través de `Calendario`; nunca con `LocalDate.now()`.
 - Etapa 1 sin login: el dueño de las tareas sale de `UsuarioActual` (hoy `UsuarioLocal`, con `chi2.tareas.usuario-local`). Toda consulta filtra por usuario y ámbito; una tarea ajena responde 404, igual que una inexistente.
-- Todo endpoint o página nueva lleva su test (`@WebMvcTest` para controladores; `@SpringBootTest` + Testcontainers cuando toca la base).
+- Todo endpoint o página nueva lleva su test (`@WebMvcTest` para controladores; `@SpringBootTest` + Testcontainers cuando toca la base). Una página nueva se suma también a la lista de `src/test/e2e/accesibilidad.spec.js`.
+- **Integraciones** (`docs/02-integraciones.md`): al terminar una, Claude la pasa a "Realizadas" y **recomienda la siguiente** con valor, esfuerzo y lo que hace falta de una persona; lo que tenga que hacer una persona (cuentas, credenciales) va también a `PENDIENTES.md`. Las credenciales nunca van al repo.
 
 ### Arquitectura en capas (regla para todo el código)
 

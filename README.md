@@ -10,7 +10,8 @@ Requisitos: Java 21 y Docker Desktop abierto.
 
 ```bash
 ./mvnw spring-boot:run   # http://localhost:8082 (levanta Postgres solo)
-./mvnw verify            # build + tests
+./mvnw verify            # build + tests (Java y JavaScript)
+npm run test:e2e         # navegador: Chrome, Firefox, celular y accesibilidad (Playwright + axe)
 ```
 
 ## Abrirlo todos los días
@@ -42,3 +43,4 @@ Documentación navegable en http://localhost:8082/api/docs (OpenAPI en `/v3/api-
 - [`PENDIENTES.md`](PENDIENTES.md): qué falta y quién lo tiene.
 - [`docs/01-especificacion.md`](docs/01-especificacion.md): funcionalidad, modelo de datos y API.
 - [`CHANGELOG.md`](CHANGELOG.md): qué cambió en cada versión.
+- [`docs/02-integraciones.md`](docs/02-integraciones.md): integraciones hechas y las que siguen (Google Calendar, Telegram, aula virtual...).

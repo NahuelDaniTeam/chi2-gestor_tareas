@@ -137,9 +137,8 @@ function dibujarTablero(tareas, contexto, acciones) {
 }
 
 function tarjeta(t, contexto, acciones) {
-	const b = el("button", "tarjeta",
+	const b = botonArrastrable("tarjeta",
 		tituloTarea(t, "font-medium leading-snug"), meta(t, contexto, { conEstado: false }));
-	b.type = "button";
 	b.dataset.prioridad = t.prioridad;
 	b.setAttribute("aria-label", `${t.titulo}. Abrir para editar.`);
 	b.addEventListener("click", () => acciones.abrir(t));
@@ -209,10 +208,9 @@ function franja(texto, tareas, plazo, fecha, contexto, acciones, siempreVisible)
 /** Tarea compacta para el calendario. */
 function pastilla(t, contexto, acciones) {
 	const finalizada = t.estado === "FINALIZADA";
-	const b = el("button", "pastilla" + (finalizada ? " finalizada" : "") + (t.vencida ? " vencida" : ""),
+	const b = botonArrastrable("pastilla" + (finalizada ? " finalizada" : "") + (t.vencida ? " vencida" : ""),
 		t.horizonte === "LIMITE" ? icono("bandera", "size-3 shrink-0 text-acento") : el("span", `punto punto-${t.prioridad}`),
 		el("span", "truncate", t.titulo));
-	b.type = "button";
 	b.title = t.titulo + (t.horizonte === "LIMITE" ? " (fecha límite)" : "");
 	const proyecto = contexto.proyectoDe(t.proyectoId);
 	if (proyecto) b.style.boxShadow = `inset 2px 0 0 ${proyecto.hex}`;
@@ -222,6 +220,23 @@ function pastilla(t, contexto, acciones) {
 }
 
 // ---------- Arrastrar y soltar ----------
+
+/**
+ * Lo que se arrastra es un div con rol de botón y no un <button>, para que el arrastre nativo funcione igual
+ * en todos los navegadores. Con Tab se enfoca y Enter o espacio lo activan, como un botón.
+ */
+function botonArrastrable(clases, ...hijos) {
+	const b = el("div", clases, ...hijos);
+	b.setAttribute("role", "button");
+	b.tabIndex = 0;
+	b.addEventListener("keydown", e => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			b.click();
+		}
+	});
+	return b;
+}
 
 function hacerArrastrable(elemento, t) {
 	elemento.draggable = true;

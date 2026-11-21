@@ -13,6 +13,10 @@ Todos los cambios que se notan al usar la app o la API. Formato de [Keep a Chang
 - Tests de punta a punta con Playwright en Chrome y Firefox, con vista de celular y auditoría de accesibilidad (axe).
 - La versión de la app se ve en el menú ⋯.
 
+### Arreglado
+- Accesibilidad: el enlace del logo anuncia el mismo texto que se ve, y suben de contraste la ayuda de las bandas del calendario y los días de otros meses.
+- Las tarjetas del tablero y del calendario se pueden enfocar con Tab y abrir con Enter o espacio.
+
 ## [0.2.0] - 2026-11-21
 
 ### Agregado

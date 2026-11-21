@@ -302,7 +302,7 @@
     @apply mr-1 text-xs font-medium whitespace-nowrap text-tenue;
   }
   .franja-ayuda {
-    @apply text-xs text-tenue/60;
+    @apply text-xs text-tenue;
   }
 
   .grilla-semana {
@@ -349,7 +349,7 @@
     @apply bg-fondo/60;
   }
   .fuera-de-mes .numero-dia {
-    @apply text-tenue/60;
+    @apply font-normal text-tenue;
   }
   .mas-tareas {
     @apply px-1 text-xs text-tenue hover:text-tinta;
