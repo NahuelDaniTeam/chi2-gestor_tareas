@@ -5,6 +5,7 @@
 
 import { api } from "./api.js";
 import { iniciarAlta } from "./alta.js";
+import { deshacer, registrar } from "./deshacer.js";
 import { avisar, guardarPreferencia, leerPreferencia } from "./dom.js";
 import { isoLocal, resumen } from "./formato.js";
 import { iniciarPanel } from "./panel.js";
@@ -100,6 +101,10 @@ async function cambiarEstado(tarea, nuevo) {
 		Object.assign(tarea, await api.cambiarEstado(tarea.id, nuevo));
 		render();
 		actualizarContadores();
+		registrar(nuevo === "FINALIZADA" ? "Tarea finalizada" : "Estado cambiado", async () => {
+			await api.cambiarEstado(tarea.id, anterior);
+			await cargar();
+		});
 	} catch (e) {
 		tarea.estado = anterior;
 		render();
@@ -115,6 +120,10 @@ async function mover(tarea, horizonte, fecha) {
 	try {
 		await api.cambiarPlazo(tarea.id, horizonte, fecha);
 		await cargar();
+		registrar("Tarea reprogramada", async () => {
+			await api.cambiarPlazo(tarea.id, anterior.horizonte, anterior.fechaReferencia);
+			await cargar();
+		}, { avisarAhora: horizonte === "SIN_PLAZO" || contexto.vista === "POR_PLANIFICAR" });
 	} catch (e) {
 		Object.assign(tarea, anterior);
 		render();
@@ -130,7 +139,12 @@ function cambiarModo(modo) {
 }
 
 let proyectos = null;
-const panel = iniciarPanel(contexto, cargar);
+const panel = iniciarPanel(contexto, cargar, tarea => {
+	registrar("Tarea enviada a la papelera", async () => {
+		await api.restaurar(tarea.id);
+		await cargar();
+	}, { avisarAhora: true });
+});
 proyectos = await iniciarProyectos(() => render());
 const alta = iniciarAlta(contexto, proyectos, async nueva => {
 	await cargar();
@@ -172,6 +186,12 @@ function irA(selector) {
 
 document.addEventListener("keydown", e => {
 	if (e.key === "Escape" && panel.estaAbierto()) { panel.cerrar(); return; }
+	const enCampo = e.target.closest("input, textarea, select, [contenteditable]");
+	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey && !enCampo && !panel.estaAbierto()) {
+		e.preventDefault();
+		deshacer();
+		return;
+	}
 	const escribiendo = e.target.closest("input, textarea, select, [contenteditable]");
 	if (escribiendo || e.ctrlKey || e.metaKey || e.altKey || panel.estaAbierto() || ayuda.open) return;
 	const atajo = ATAJOS_GLOBALES[e.key];

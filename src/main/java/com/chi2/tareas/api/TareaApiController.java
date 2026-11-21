@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.chi2.tareas.tarea.CambioEstadoRequest;
+import com.chi2.tareas.tarea.CambioPasoRequest;
 import com.chi2.tareas.tarea.CambioPlazoRequest;
 import com.chi2.tareas.tarea.CambioPrioridadRequest;
 import com.chi2.tareas.tarea.EstadoTarea;
 import com.chi2.tareas.tarea.FiltroTareas;
+import com.chi2.tareas.tarea.PasoRequest;
 import com.chi2.tareas.tarea.Prioridad;
 import com.chi2.tareas.tarea.Rango;
 import com.chi2.tareas.tarea.TareaRequest;
@@ -104,6 +106,26 @@ public class TareaApiController {
 		return service.cambiarPrioridad(id, cambio.prioridad());
 	}
 
+	// ---------- Checklist ----------
+
+	@PostMapping("/{id}/pasos")
+	@ResponseStatus(HttpStatus.CREATED)
+	public TareaResponse agregarPaso(@PathVariable UUID id, @Valid @RequestBody PasoRequest paso) {
+		return service.agregarPaso(id, paso.texto());
+	}
+
+	@PatchMapping("/{id}/pasos/{pasoId}")
+	public TareaResponse editarPaso(@PathVariable UUID id, @PathVariable UUID pasoId,
+			@Valid @RequestBody CambioPasoRequest cambio) {
+		return service.editarPaso(id, pasoId, cambio.texto(), cambio.hecho());
+	}
+
+	@DeleteMapping("/{id}/pasos/{pasoId}")
+	public TareaResponse eliminarPaso(@PathVariable UUID id, @PathVariable UUID pasoId) {
+		return service.eliminarPaso(id, pasoId);
+	}
+
+	/** La manda a la papelera ({@code /api/papelera} para restaurarla). */
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void eliminar(@PathVariable UUID id) {

@@ -343,6 +343,36 @@
     @apply opacity-40;
   }
 
+  /* ---------- Checklist ---------- */
+
+  .paso-texto {
+    @apply min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-sm outline-none focus:bg-superficie;
+  }
+  .paso-texto.hecho {
+    @apply text-tenue line-through decoration-tenue/40;
+  }
+  .paso-nuevo {
+    @apply mt-1.5 w-full rounded-md bg-transparent px-1.5 py-1.5 text-sm outline-none placeholder:text-tenue/70 focus:bg-superficie;
+  }
+
+  /* ---------- Menú "Más" ---------- */
+
+  .menu {
+    @apply relative;
+  }
+  .menu > summary {
+    @apply cursor-pointer list-none;
+  }
+  .menu > summary::-webkit-details-marker {
+    display: none;
+  }
+  .menu-contenido {
+    @apply absolute right-0 z-30 mt-2 flex w-56 flex-col rounded-xl border border-linea bg-superficie p-1.5 shadow-[0_12px_32px_-12px_rgb(25_23_20/0.3)];
+  }
+  .menu-opcion {
+    @apply flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-tinta transition hover:bg-linea/60;
+  }
+
   /* ---------- Carga ---------- */
 
   .esqueleto {

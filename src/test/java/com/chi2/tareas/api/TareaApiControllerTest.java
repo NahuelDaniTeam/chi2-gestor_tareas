@@ -227,7 +227,7 @@ class TareaApiControllerTest {
 		Instant ahora = WebMvcTestConfig.AHORA;
 		return new TareaResponse(ID, "Leer capítulo 3", null, Horizonte.SEMANA, LocalDate.parse("2026-11-16"),
 				Prioridad.ALTA, estado, Ambito.PERSONAL, null, false, ahora, ahora,
-				estado == EstadoTarea.FINALIZADA ? ahora : null);
+				estado == EstadoTarea.FINALIZADA ? ahora : null, List.of(), null);
 	}
 
 }

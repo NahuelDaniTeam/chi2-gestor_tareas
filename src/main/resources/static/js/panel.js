@@ -4,7 +4,7 @@
  */
 
 import { api } from "./api.js";
-import { atraparFoco, avisar, icono } from "./dom.js";
+import { atraparFoco, el, icono } from "./dom.js";
 import { momento } from "./formato.js";
 
 const ETIQUETA_FECHA = {
@@ -25,15 +25,17 @@ const AYUDA_FECHA = {
 /**
  * @param contexto {hoy}
  * @param alCerrar callback() para recargar la vista
+ * @param alEliminar callback(tarea) cuando se elimina desde el panel (manda a la papelera y ofrece deshacer)
  */
-export function iniciarPanel(contexto, alCerrar) {
+export function iniciarPanel(contexto, alCerrar, alEliminar) {
 	const panel = document.getElementById("panel");
 	const fondo = document.getElementById("panel-fondo");
 	const form = document.getElementById("panel-form");
 	const estadoGuardado = document.getElementById("panel-guardado");
 	const error = document.getElementById("p-error");
 	const eliminar = document.getElementById("p-eliminar");
-	const confirmar = document.getElementById("p-confirmar");
+	const listaPasos = document.getElementById("p-pasos");
+	const nuevoPaso = document.getElementById("p-nuevo-paso");
 	const campo = nombre => form.elements[nombre];
 
 	let tarea = null;
@@ -55,7 +57,7 @@ export function iniciarPanel(contexto, alCerrar) {
 		mostrarMeta();
 		mostrarError(null);
 		indicar("");
-		mostrarConfirmacion(false);
+		dibujarPasos();
 		panel.hidden = fondo.hidden = false;
 		document.body.classList.add("overflow-hidden");
 		requestAnimationFrame(() => panel.classList.add("abierto"));
@@ -146,11 +148,62 @@ export function iniciarPanel(contexto, alCerrar) {
 		}
 	}
 
-	function mostrarConfirmacion(visible) {
-		eliminar.hidden = visible;
-		confirmar.hidden = !visible;
-		if (visible) document.getElementById("p-confirmar-no").focus();
+	// ---------- Checklist ----------
+
+	function dibujarPasos() {
+		const pasos = tarea?.pasos ?? [];
+		const hechos = pasos.filter(p => p.hecho).length;
+		document.getElementById("p-pasos-progreso").textContent = pasos.length ? `${hechos} de ${pasos.length}` : "";
+		listaPasos.replaceChildren(...pasos.map(paso => {
+			const casilla = el("button", "casilla", icono("check", "size-3"));
+			casilla.type = "button";
+			casilla.setAttribute("role", "checkbox");
+			casilla.setAttribute("aria-checked", String(paso.hecho));
+			casilla.setAttribute("aria-label", (paso.hecho ? "Desmarcar: " : "Marcar: ") + paso.texto);
+			casilla.addEventListener("click", () => cambiarPaso(api.editarPaso(tarea.id, paso.id, { hecho: !paso.hecho })));
+
+			const texto = el("input", "paso-texto" + (paso.hecho ? " hecho" : ""));
+			texto.value = paso.texto;
+			texto.maxLength = 200;
+			texto.setAttribute("aria-label", "Paso");
+			texto.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); texto.blur(); } });
+			texto.addEventListener("change", () => texto.value.trim()
+				? cambiarPaso(api.editarPaso(tarea.id, paso.id, { texto: texto.value }))
+				: (texto.value = paso.texto));
+
+			const quitar = el("button", "boton-icono size-7 opacity-0 group-hover:opacity-100 focus:opacity-100", icono("cerrar", "size-3.5"));
+			quitar.type = "button";
+			quitar.setAttribute("aria-label", "Quitar paso: " + paso.texto);
+			quitar.addEventListener("click", () => cambiarPaso(api.eliminarPaso(tarea.id, paso.id)));
+			return el("li", "group flex items-center gap-2.5", casilla, texto, quitar);
+		}));
 	}
+
+	async function cambiarPaso(pedido) {
+		const t = tarea;
+		indicar("Guardando…");
+		try {
+			Object.assign(t, await pedido);
+			if (tarea === t) {
+				dibujarPasos();
+				mostrarMeta();
+				indicar("Guardado", true);
+			}
+		} catch (e) {
+			indicar("");
+			mostrarError(e.primerMensaje ?? e.message);
+		}
+	}
+
+	nuevoPaso.addEventListener("keydown", async e => {
+		if (e.key !== "Enter") return;
+		e.preventDefault();
+		if (!nuevoPaso.value.trim() || !tarea) return;
+		const texto = nuevoPaso.value;
+		nuevoPaso.value = "";
+		await cambiarPaso(api.agregarPaso(tarea.id, texto));
+		nuevoPaso.focus();
+	});
 
 	function ajustarAlto(textarea) {
 		textarea.style.height = "auto";
@@ -171,16 +224,13 @@ export function iniciarPanel(contexto, alCerrar) {
 	});
 	form.addEventListener("submit", e => e.preventDefault());
 
-	eliminar.addEventListener("click", () => mostrarConfirmacion(true));
-	document.getElementById("p-confirmar-no").addEventListener("click", () => {
-		mostrarConfirmacion(false);
-		eliminar.focus();
-	});
-	document.getElementById("p-confirmar-si").addEventListener("click", async () => {
+	// Eliminar no pregunta: va a la papelera y el aviso ofrece deshacer (§4.8).
+	eliminar.addEventListener("click", async () => {
+		const t = tarea;
 		try {
-			await api.eliminar(tarea.id);
-			avisar("Tarea eliminada.");
+			await api.eliminar(t.id);
 			cerrar();
+			alEliminar(t);
 		} catch (e) {
 			mostrarError(e.message);
 		}

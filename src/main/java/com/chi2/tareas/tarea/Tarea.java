@@ -2,9 +2,12 @@ package com.chi2.tareas.tarea;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,9 +15,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 
-/** Tarea del gestor (§4.1 y §7). Nunca sale de la capa de service. */
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.SQLRestriction;
+
+/**
+ * Tarea del gestor (§4.1 y §7). Nunca sale de la capa de service.
+ * Las que están en la papelera no aparecen en ninguna consulta JPA: la papelera usa consultas nativas.
+ */
 @Entity
+@SQLRestriction("eliminada_en is null")
 public class Tarea {
 
 	@Id
@@ -68,6 +80,14 @@ public class Tarea {
 
 	@Column(name = "completada_en")
 	private Instant completadaEn;
+
+	@Column(name = "eliminada_en")
+	private Instant eliminadaEn;
+
+	@OneToMany(mappedBy = "tarea", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("orden")
+	@BatchSize(size = 100)
+	private List<Paso> pasos = new ArrayList<>();
 
 	protected Tarea() {
 		// para JPA
@@ -130,6 +150,39 @@ public class Tarea {
 		}
 		this.prioridad = nueva;
 		this.actualizadaEn = ahora;
+	}
+
+	// ---------- Checklist (§4.7) ----------
+
+	public Paso agregarPaso(String texto, Instant ahora) {
+		int orden = pasos.stream().mapToInt(Paso::getOrden).max().orElse(0) + 1;
+		Paso paso = new Paso(this, texto, orden);
+		pasos.add(paso);
+		this.actualizadaEn = ahora;
+		return paso;
+	}
+
+	/** @throws PasoNoEncontradoException si el paso no es de esta tarea */
+	public void editarPaso(UUID pasoId, String texto, Boolean hecho, Instant ahora) {
+		buscarPaso(pasoId).editar(texto, hecho);
+		this.actualizadaEn = ahora;
+	}
+
+	/** @throws PasoNoEncontradoException si el paso no es de esta tarea */
+	public void eliminarPaso(UUID pasoId, Instant ahora) {
+		pasos.remove(buscarPaso(pasoId));
+		this.actualizadaEn = ahora;
+	}
+
+	private Paso buscarPaso(UUID pasoId) {
+		return pasos.stream().filter(p -> p.getId().equals(pasoId)).findFirst()
+				.orElseThrow(() -> new PasoNoEncontradoException(pasoId));
+	}
+
+	// ---------- Papelera (§4.8) ----------
+
+	public void enviarAPapelera(Instant ahora) {
+		this.eliminadaEn = ahora;
 	}
 
 	/** Sin terminar y con su período (o su fecha límite) ya pasado. */
@@ -196,6 +249,14 @@ public class Tarea {
 
 	public Instant getCompletadaEn() {
 		return completadaEn;
+	}
+
+	public Instant getEliminadaEn() {
+		return eliminadaEn;
+	}
+
+	public List<Paso> getPasos() {
+		return List.copyOf(pasos);
 	}
 
 }

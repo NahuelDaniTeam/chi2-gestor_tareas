@@ -320,6 +320,11 @@ function meta(t, contexto, { conEstado }) {
 		partes.push(el("span", "inline-flex items-center gap-1" + (t.horizonte === "LIMITE" ? " text-tinta" : ""),
 			icono(t.horizonte === "LIMITE" ? "bandera" : "calendario", "size-3.5"), fecha));
 	}
+	if (t.pasos?.length) {
+		const hechos = t.pasos.filter(p => p.hecho).length;
+		partes.push(el("span", "inline-flex items-center gap-1 tabular-nums" + (hechos === t.pasos.length ? " text-tinta" : ""),
+			icono("lista", "size-3.5"), `${hechos}/${t.pasos.length}`));
+	}
 	if (conEstado && t.estado === "EN_CURSO") partes.push(el("span", "etiqueta-estado", "En curso"));
 	if (!partes.length) return null;
 	return el("span", "mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tenue", ...partes);

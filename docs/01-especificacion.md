@@ -102,6 +102,20 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 - El diálogo "Administrar proyectos…" (desde el filtro) permite crear, renombrar, cambiar el color y eliminar. Al eliminar un proyecto, sus tareas quedan sin proyecto.
 - Base de la etapa 2: un grupo va a funcionar como un proyecto compartido.
 
+### 4.7 Checklist
+
+- Cada tarea puede tener **pasos** (hasta 200 caracteres cada uno), en el orden en que se agregan.
+- En el panel: casilla para marcar, texto editable en el lugar y botón para quitar; "+ Agregar un paso" y Enter agrega otro.
+- En la lista, el tablero y la tarjeta se ve el progreso ("2/5").
+
+### 4.8 Papelera y deshacer
+
+- **Eliminar no pregunta:** la tarea va a la papelera y un aviso ofrece **Deshacer** durante unos segundos.
+- **Ctrl+Z** (fuera de un campo de texto) deshace la última acción: mandar a la papelera, finalizar o reabrir, y reprogramar (arrastre o botones de Por planificar). Se recuerdan las últimas 20 mientras la página está abierta.
+- La **papelera** (menú ⋯ del encabezado) lista lo eliminado: se puede restaurar o borrar para siempre, una por una o vaciándola entera (esto sí pide confirmación, porque no se puede deshacer).
+- Lo que lleva más de **30 días** en la papelera se borra solo (`chi2.tareas.retencion-papelera`; se revisa cada hora).
+- Las tareas en la papelera no aparecen en ninguna vista ni en la API de tareas.
+
 ## 5. Etapa 2: grupos (después del MVP personal)
 
 - Un usuario puede **crear grupos** (por ejemplo, "Tesis") e invitar a otros usuarios.
@@ -119,7 +133,6 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 
 - Recordatorios y notificaciones.
 - Tareas recurrentes.
-- Subtareas.
 - Adjuntos.
 - Edición en tiempo real entre usuarios (los cambios se ven al recargar; la lista también se recarga al volver a la ventana).
 - App nativa. La API REST ya queda preparada para sumarla más adelante.
@@ -145,6 +158,8 @@ Tabla `tarea` (migraciones `V1__tarea.sql` y `V2__plazos_anidados.sql`):
 | `completada_en` | timestamp, opcional | Se completa al pasar a `FINALIZADA` y se borra si vuelve atrás (restricción en la base) |
 
 Tabla `proyecto` (`V3__proyecto.sql`): `id`, `usuario_id`, `nombre`, `color`, `creado_en`. La tarea suma `proyecto_id` (clave foránea; al borrar el proyecto queda en nulo).
+
+`V4__pasos_y_papelera.sql` suma la tabla `paso` (`tarea_id`, `texto`, `hecho`, `orden`; se borra con su tarea) y `tarea.eliminada_en` (papelera).
 
 Etapa 2 agrega las tablas `grupo` y `miembro_grupo` (grupo, usuario y rol) y las claves foráneas de `grupo_id` y `asignado_a`. El modelo queda preparado desde el MVP con `usuario_id` y `ambito`, para no rehacer la base.
 
@@ -178,7 +193,15 @@ Endpoints del MVP:
 | `PUT /api/proyectos/{id}` | Renombrar o cambiar el color. | 200 / 400 / 404 / 409 |
 | `DELETE /api/proyectos/{id}` | Elimina; sus tareas quedan sin proyecto. | 204 / 404 |
 
-Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
+| `POST /api/tareas/{id}/pasos` | `{ "texto": "Buscar fuentes" }`: agrega un paso. Devuelve la tarea. | 201 / 400 / 404 |
+| `PATCH /api/tareas/{id}/pasos/{pasoId}` | `{ "hecho": true }` y/o `{ "texto": "..." }`. | 200 / 400 / 404 |
+| `DELETE /api/tareas/{id}/pasos/{pasoId}` | Quita un paso. Devuelve la tarea. | 200 / 404 |
+| `GET /api/papelera` | Tareas eliminadas, la más reciente primero. | 200 |
+| `POST /api/papelera/{id}/restaurar` | Restaura. | 200 / 404 |
+| `DELETE /api/papelera/{id}` | Borra para siempre. | 204 / 404 |
+| `DELETE /api/papelera` | Vacía la papelera. | 204 |
+
+`DELETE /api/tareas/{id}` manda la tarea a la papelera. Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
 
 Los errores vuelven como `ProblemDetail`; los de validación, con un mapa `errores` por campo. Una tarea de otro usuario responde 404, igual que una inexistente.
 

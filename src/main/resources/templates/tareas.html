@@ -181,6 +181,16 @@
 		</fieldset>
 
 		<div>
+			<div class="mb-2 flex items-baseline justify-between">
+				<span class="rotulo mb-0">Checklist</span>
+				<span id="p-pasos-progreso" class="text-xs tabular-nums text-tenue"></span>
+			</div>
+			<ul id="p-pasos" class="flex flex-col gap-1.5"></ul>
+			<label for="p-nuevo-paso" class="sr-only">Agregar un paso</label>
+			<input id="p-nuevo-paso" maxlength="200" class="paso-nuevo" placeholder="+ Agregar un paso y Enter">
+		</div>
+
+		<div>
 			<label for="p-proyecto" class="rotulo">Proyecto</label>
 			<select id="p-proyecto" name="proyectoId" class="campo"><option value="">Sin proyecto</option></select>
 		</div>
@@ -194,15 +204,8 @@
 	</form>
 	<div class="border-t border-linea px-6 py-4">
 		<button type="button" id="p-eliminar" class="boton-texto inline-flex items-center gap-2 hover:text-acento">
-			<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Eliminar tarea
+			<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Mandar a la papelera
 		</button>
-		<div id="p-confirmar" class="flex flex-wrap items-center justify-between gap-3" hidden>
-			<span class="text-sm">¿Eliminar esta tarea? No se puede deshacer.</span>
-			<span class="flex items-center gap-2">
-				<button type="button" id="p-confirmar-no" class="boton-secundario">Cancelar</button>
-				<button type="button" id="p-confirmar-si" class="boton-peligro">Eliminar</button>
-			</span>
-		</div>
 	</div>
 </aside>
 
@@ -255,6 +258,7 @@
 				<dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Período anterior o siguiente</dd>
 				<dt><kbd>T</kbd></dt><dd>Cambiar entre calendario, lista y tablero</dd>
 				<dt><kbd>Esc</kbd></dt><dd>Cerrar el panel</dd>
+				<dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Deshacer (eliminar, mover, finalizar)</dd>
 				<dt><kbd>?</kbd></dt><dd>Esta ayuda</dd>
 			</dl>
 		</section>

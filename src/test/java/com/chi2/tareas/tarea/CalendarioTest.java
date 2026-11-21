@@ -1,5 +1,6 @@
 package com.chi2.tareas.tarea;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -16,7 +17,7 @@ class CalendarioTest {
 
 	final RelojDeTest reloj = new RelojDeTest(Instant.parse("2026-11-19T15:00:00Z"));
 	final Calendario calendario = new Calendario(reloj,
-			new TareasProperties(ZoneId.of("America/Argentina/Cordoba"), UUID.randomUUID()));
+			new TareasProperties(ZoneId.of("America/Argentina/Cordoba"), UUID.randomUUID(), Duration.ofDays(30)));
 
 	@Test
 	void hoyEsElDiaEnArgentinaAunqueEnUtcYaSeaManana() {

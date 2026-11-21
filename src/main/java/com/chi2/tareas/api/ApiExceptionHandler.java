@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.chi2.tareas.proyecto.ProyectoDuplicadoException;
 import com.chi2.tareas.proyecto.ProyectoNoEncontradoException;
+import com.chi2.tareas.tarea.PasoNoEncontradoException;
 import com.chi2.tareas.tarea.TareaNoEncontradaException;
 
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,11 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(TareaNoEncontradaException.class)
 	public ProblemDetail noEncontrada() {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, TareaNoEncontradaException.MENSAJE);
+	}
+
+	@ExceptionHandler(PasoNoEncontradoException.class)
+	public ProblemDetail pasoNoEncontrado() {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, PasoNoEncontradoException.MENSAJE);
 	}
 
 	@ExceptionHandler(ProyectoNoEncontradoException.class)

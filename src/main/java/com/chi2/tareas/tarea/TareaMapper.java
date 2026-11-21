@@ -25,7 +25,9 @@ public class TareaMapper {
 	public TareaResponse aResponse(Tarea tarea, LocalDate hoy) {
 		return new TareaResponse(tarea.getId(), tarea.getTitulo(), tarea.getDescripcion(), tarea.getHorizonte(),
 				tarea.getFechaReferencia(), tarea.getPrioridad(), tarea.getEstado(), tarea.getAmbito(), tarea.getProyectoId(),
-				tarea.estaVencida(hoy), tarea.getCreadaEn(), tarea.getActualizadaEn(), tarea.getCompletadaEn());
+				tarea.estaVencida(hoy), tarea.getCreadaEn(), tarea.getActualizadaEn(), tarea.getCompletadaEn(),
+				tarea.getPasos().stream().map(p -> new PasoResponse(p.getId(), p.getTexto(), p.isHecho())).toList(),
+				tarea.getEliminadaEn());
 	}
 
 }

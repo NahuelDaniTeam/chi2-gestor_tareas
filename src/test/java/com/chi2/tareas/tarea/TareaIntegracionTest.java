@@ -1,6 +1,7 @@
 package com.chi2.tareas.tarea;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,9 +68,16 @@ class TareaIntegracionTest {
 	@Autowired
 	Clock clock;
 
+	@Autowired
+	RetencionPapeleraService retencion;
+
+	@Autowired
+	JdbcTemplate jdbc;
+
 	@BeforeEach
 	void limpiar() {
-		repository.deleteAll();
+		// También las que están en la papelera, que el repositorio no ve
+		jdbc.update("delete from tarea");
 		reloj.fijar(AHORA);
 	}
 
@@ -208,12 +217,80 @@ class TareaIntegracionTest {
 	}
 
 	@Test
-	void eliminar() throws Exception {
+	void eliminarLaMandaALaPapeleraDondeSePuedeRestaurar() throws Exception {
 		String id = crear("Borrar", "DIA", "2026-11-19", "MEDIA");
 
 		mvc.perform(delete("/api/tareas/{id}", id)).andExpect(status().isNoContent());
 		mvc.perform(get("/api/tareas/{id}", id)).andExpect(status().isNotFound());
-		assertThat(repository.count()).isZero();
+		mvc.perform(get("/api/tareas/hoy")).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(get("/api/papelera"))
+				.andExpect(jsonPath("$[*].titulo", contains("Borrar")))
+				.andExpect(jsonPath("$[0].eliminadaEn").value("2026-11-19T15:00:00Z"));
+
+		mvc.perform(post("/api/papelera/{id}/restaurar", id))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.eliminadaEn").value(nullValue()));
+		mvc.perform(get("/api/tareas/hoy")).andExpect(jsonPath("$[*].titulo", contains("Borrar")));
+		mvc.perform(get("/api/papelera")).andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void desdeLaPapeleraSeBorraDeVerdadUnaOTodas() throws Exception {
+		String una = crear("Una", "DIA", "2026-11-19", "MEDIA");
+		String otra = crear("Otra", "DIA", "2026-11-19", "MEDIA");
+		String sigue = crear("Sigue", "DIA", "2026-11-19", "MEDIA");
+		mvc.perform(delete("/api/tareas/{id}", una));
+		mvc.perform(delete("/api/tareas/{id}", otra));
+
+		mvc.perform(delete("/api/papelera/{id}", una)).andExpect(status().isNoContent());
+		mvc.perform(delete("/api/papelera/{id}", sigue)).andExpect(status().isNotFound());
+		mvc.perform(get("/api/papelera")).andExpect(jsonPath("$[*].titulo", contains("Otra")));
+
+		mvc.perform(delete("/api/papelera")).andExpect(status().isNoContent());
+		mvc.perform(get("/api/papelera")).andExpect(jsonPath("$.length()").value(0));
+		assertThat(repository.count()).isEqualTo(1);
+	}
+
+	@Test
+	void laRetencionBorraLasQueLlevanMasDeTreintaDiasEnLaPapelera() throws Exception {
+		String vieja = crear("Vieja", "DIA", "2026-11-19", "MEDIA");
+		mvc.perform(delete("/api/tareas/{id}", vieja));
+		reloj.adelantar(Duration.ofDays(20));
+		String nueva = crear("Nueva", "DIA", "2026-11-19", "MEDIA");
+		mvc.perform(delete("/api/tareas/{id}", nueva));
+		reloj.adelantar(Duration.ofDays(11));
+
+		assertThat(retencion.purgar()).isEqualTo(1);
+		mvc.perform(get("/api/papelera")).andExpect(jsonPath("$[*].titulo", contains("Nueva")));
+	}
+
+	@Test
+	void elChecklistSeAgregaTildaEditaYBorra() throws Exception {
+		String id = crear("Capítulo 2", "SEMANA", "2026-11-19", "ALTA");
+
+		String cuerpo = mvc.perform(post("/api/tareas/{id}/pasos", id).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"texto\": \" Buscar fuentes \" }"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.pasos[*].texto", contains("Buscar fuentes")))
+				.andReturn().getResponse().getContentAsString();
+		String paso = JsonPath.read(cuerpo, "$.pasos[0].id");
+		mvc.perform(post("/api/tareas/{id}/pasos", id).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"texto\": \"Escribir borrador\" }"))
+				.andExpect(jsonPath("$.pasos[*].texto", contains("Buscar fuentes", "Escribir borrador")));
+
+		mvc.perform(patch("/api/tareas/{id}/pasos/{paso}", id, paso).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"hecho\": true }"))
+				.andExpect(jsonPath("$.pasos[0].hecho").value(true))
+				.andExpect(jsonPath("$.pasos[0].texto").value("Buscar fuentes"));
+		mvc.perform(patch("/api/tareas/{id}/pasos/{paso}", id, paso).contentType(MediaType.APPLICATION_JSON)
+						.content("{ \"texto\": \"   \" }"))
+				.andExpect(status().isBadRequest());
+
+		mvc.perform(delete("/api/tareas/{id}/pasos/{paso}", id, paso))
+				.andExpect(jsonPath("$.pasos[*].texto", contains("Escribir borrador")));
+		mvc.perform(delete("/api/tareas/{id}/pasos/{paso}", id, paso)).andExpect(status().isNotFound());
+		mvc.perform(get("/api/tareas").param("desde", "2026-11-16").param("hasta", "2026-11-22"))
+				.andExpect(jsonPath("$[0].pasos.length()").value(1));
 	}
 
 	@Test

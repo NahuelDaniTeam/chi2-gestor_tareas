@@ -113,9 +113,60 @@ public class TareaService {
 		return mapper.aResponse(tarea, calendario.hoy());
 	}
 
+	// ---------- Checklist (§4.7) ----------
+
+	@Transactional
+	public TareaResponse agregarPaso(UUID id, String texto) {
+		Tarea tarea = buscar(id);
+		tarea.agregarPaso(texto, clock.instant());
+		return mapper.aResponse(tarea, calendario.hoy());
+	}
+
+	@Transactional
+	public TareaResponse editarPaso(UUID id, UUID pasoId, String texto, Boolean hecho) {
+		Tarea tarea = buscar(id);
+		tarea.editarPaso(pasoId, texto, hecho, clock.instant());
+		return mapper.aResponse(tarea, calendario.hoy());
+	}
+
+	@Transactional
+	public TareaResponse eliminarPaso(UUID id, UUID pasoId) {
+		Tarea tarea = buscar(id);
+		tarea.eliminarPaso(pasoId, clock.instant());
+		return mapper.aResponse(tarea, calendario.hoy());
+	}
+
+	// ---------- Papelera (§4.8) ----------
+
+	/** La manda a la papelera: se puede restaurar hasta que se vacíe o pasen los días de retención. */
 	@Transactional
 	public void eliminar(UUID id) {
-		repository.delete(buscar(id));
+		buscar(id).enviarAPapelera(clock.instant());
+	}
+
+	public List<TareaResponse> papelera() {
+		LocalDate hoy = calendario.hoy();
+		return repository.papelera(usuario.id()).stream().map(t -> mapper.aResponse(t, hoy)).toList();
+	}
+
+	@Transactional
+	public TareaResponse restaurar(UUID id) {
+		if (repository.restaurar(id, usuario.id(), clock.instant()) == 0) {
+			throw new TareaNoEncontradaException(id);
+		}
+		return obtener(id);
+	}
+
+	@Transactional
+	public void eliminarDefinitivamente(UUID id) {
+		if (repository.eliminarDefinitivamente(id, usuario.id()) == 0) {
+			throw new TareaNoEncontradaException(id);
+		}
+	}
+
+	@Transactional
+	public void vaciarPapelera() {
+		repository.vaciarPapelera(usuario.id());
 	}
 
 	private Tarea buscar(UUID id) {

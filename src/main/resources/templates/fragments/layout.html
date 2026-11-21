@@ -41,17 +41,27 @@
 <header th:fragment="encabezado" class="sticky top-0 z-20 border-b border-linea/80 bg-fondo/90 backdrop-blur">
 	<nav class="contenedor flex items-center justify-between gap-6 py-3.5" aria-label="Vistas">
 		<a th:replace="~{fragments/layout :: logo}"></a>
-		<ul class="-mr-1 flex gap-0.5 overflow-x-auto text-sm text-tenue">
-			<li th:each="v, i : ${vistas}">
+		<ul class="-mr-1 ml-auto flex gap-0.5 overflow-x-auto text-sm text-tenue">
+			<li th:each="v, i : ${T(com.chi2.tareas.tarea.Vista).values()}">
 				<a th:href="@{${v.ruta}}" class="pestana" th:data-vista="${v.name()}"
 				   th:title="${v.etiqueta} + ' (' + ${i.count} + ')'"
-				   th:attr="aria-current=${v == vista} ? 'page' : null">
+				   th:attr="aria-current=${vista != null and v == vista} ? 'page' : null">
 					<span th:text="${v.etiqueta}">Vista</span>
 					<span th:if="${v.name() == 'HOY'}" class="contador" data-contador-hoy hidden></span>
 					<span th:if="${v.name() == 'POR_PLANIFICAR'}" class="contador contador-suave" data-contador-sin-plazo hidden></span>
 				</a>
 			</li>
 		</ul>
+		<details class="menu">
+			<summary class="boton-icono" aria-label="Más opciones" title="Más opciones">
+				<svg th:replace="~{fragments/layout :: icono('puntos', 'size-4')}"></svg>
+			</summary>
+			<div class="menu-contenido">
+				<a th:href="@{/papelera}" class="menu-opcion">
+					<svg th:replace="~{fragments/layout :: icono('papelera', 'size-4')}"></svg>Papelera
+				</a>
+			</div>
+		</details>
 	</nav>
 </header>
 

@@ -55,7 +55,6 @@ public class TareaPaginaController {
 		boolean esElActual = navega && periodo.rango().desde().compareTo(hoy) <= 0
 				&& periodo.rango().hasta().compareTo(hoy) >= 0;
 		model.addAttribute("vista", vista);
-		model.addAttribute("vistas", Vista.values());
 		model.addAttribute("periodo", periodo);
 		model.addAttribute("urlLista", vista.urlLista(periodo));
 		model.addAttribute("urlAnterior", navega ? vista.rutaPara(periodo.anterior()) : null);
