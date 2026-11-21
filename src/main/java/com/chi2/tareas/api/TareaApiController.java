@@ -19,6 +19,8 @@ import com.chi2.tareas.tarea.TareaService;
 
 import jakarta.validation.Valid;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code /api/tareas} (docs/01-especificacion.md §8). La interfaz web consume esta misma API;
  * una app nativa futura también.
  */
+@Tag(name = "Tareas")
 @RestController
 @RequestMapping("/api/tareas")
 public class TareaApiController {

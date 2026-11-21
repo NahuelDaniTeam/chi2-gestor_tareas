@@ -9,6 +9,8 @@ import com.chi2.tareas.proyecto.ProyectoService;
 
 import jakarta.validation.Valid;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /** {@code /api/proyectos} (§4.6 y §8). */
+@Tag(name = "Proyectos")
 @RestController
 @RequestMapping("/api/proyectos")
 public class ProyectoApiController {

@@ -6,6 +6,8 @@ import java.util.UUID;
 import com.chi2.tareas.tarea.TareaResponse;
 import com.chi2.tareas.tarea.TareaService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /** {@code /api/papelera} (§4.8): tareas eliminadas, para restaurarlas o borrarlas de verdad. */
+@Tag(name = "Papelera")
 @RestController
 @RequestMapping("/api/papelera")
 public class PapeleraApiController {

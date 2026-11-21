@@ -28,6 +28,9 @@ public interface TareaRepository extends JpaRepository<Tarea, UUID> {
 	List<Tarea> findByUsuarioIdAndAmbitoAndEstadoNotAndFechaReferenciaBefore(UUID usuarioId, Ambito ambito,
 			EstadoTarea estado, LocalDate fecha);
 
+	/** Para los respaldos: todas las del usuario (salvo las de la papelera). */
+	List<Tarea> findByUsuarioIdAndAmbitoOrderByCreadaEnAsc(UUID usuarioId, Ambito ambito);
+
 	/** Para las estadísticas: finalizadas desde un momento. */
 	List<Tarea> findByUsuarioIdAndAmbitoAndCompletadaEnGreaterThanEqual(UUID usuarioId, Ambito ambito, Instant desde);
 

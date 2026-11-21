@@ -27,7 +27,8 @@ class PapeleraPaginaControllerTest {
 		mvc.perform(get("/papelera"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("papelera"))
-				.andExpect(content().string(containsString("Se pueden restaurar durante <span>30</span> días")));
+				.andExpect(content().string(containsString("Se pueden restaurar durante <span>30</span> días")))
+				.andExpect(content().string(containsString("Versión <span>0.")));
 	}
 
 }

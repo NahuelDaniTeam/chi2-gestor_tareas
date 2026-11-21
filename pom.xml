@@ -10,13 +10,14 @@
 	</parent>
 	<groupId>com.chi2</groupId>
 	<artifactId>gestor-tareas</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.2.0</version>
 	<name>gestor-tareas</name>
 	<description>CHI2 - Gestor de tareas</description>
 	<properties>
 		<java.version>21</java.version>
 		<node.version>v22.15.0</node.version>
 		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+		<springdoc.version>3.2.1</springdoc.version>
 		<!-- La app corre en UTC (ver WebApplication). Evita además que Windows mande
 		     "America/Buenos_Aires", nombre que Postgres 17 rechaza. -->
 		<argLine>-Duser.timezone=UTC</argLine>
@@ -49,6 +50,12 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<!-- Documentación de la API (OpenAPI + Swagger UI en /api/docs) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 
 		<dependency>

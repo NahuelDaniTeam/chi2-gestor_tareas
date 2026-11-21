@@ -69,6 +69,7 @@ src/main/java/com/chi2/tareas/
 ├── tarea/                     tareas: dominio, plazos (Rango), calendario, service, repository, páginas (docs/01)
 ├── proyecto/                  proyectos o etiquetas de las tareas (§4.6)
 ├── estadistica/               estadísticas (§4.14): cálculo puro, service y página
+├── respaldo/                  respaldo diario automático y exportación JSON/CSV (§4.15)
 └── api/                       @RestController bajo /api/... y su manejo de errores
 src/main/resources/
 ├── templates/                 vistas Thymeleaf (fragments/layout.html = piezas compartidas)
@@ -192,6 +193,11 @@ a preguntar**, siguiendo este proceso:
 **Única excepción — preguntar antes de resolver:** si los dos lados cambian el mismo
 comportamiento de formas contradictorias (no se pueden conservar ambos), Claude explica
 las dos opciones y le pregunta al usuario cuál va.
+
+### Versiones
+
+- `CHANGELOG.md` registra lo que se nota al usar la app o la API. Toda PR que cambie algo visible suma su renglón en **"Sin publicar"**.
+- Al publicar: número según el cambio (arreglos `0.x.1`, funciones `0.x.0`), `<version>` del `pom.xml` y tag `vX.Y.Z` sobre `main`.
 
 ### Commits
 

@@ -154,6 +154,12 @@ Las pestañas Hoy y Por planificar muestran cuántas tareas tienen pendientes; e
 - Por proyecto: finalizadas en los últimos 30 días y pendientes.
 - El color de las barras está validado contra las superficies clara y oscura (contraste y luminosidad).
 
+### 4.15 Respaldos y exportación
+
+- **Automático:** la app guarda un respaldo JSON por día (todas las tareas con sus pasos y los proyectos) en `~/CHI2-Tareas/respaldos` y conserva los últimos 30. Se revisa al arrancar y cada hora. Configurable con `CHI2_RESPALDOS_CARPETA` y `CHI2_RESPALDOS_AUTOMATICOS`.
+- **Exportar** desde el menú ⋯: las tareas en **CSV** (separado por punto y coma, para abrir directo en Excel) o el respaldo completo en **JSON**.
+- **Base completa:** `scripts/respaldar-base.ps1` hace un `pg_dump` (con la papelera y todo) y `scripts/restaurar-base.ps1` lo restaura, pidiendo confirmación porque reemplaza todo.
+
 ## 5. Etapa 2: grupos (después del MVP personal)
 
 - Un usuario puede **crear grupos** (por ejemplo, "Tesis") e invitar a otros usuarios.
@@ -244,6 +250,10 @@ Endpoints del MVP:
 | `POST /api/tareas/{id}/recordatorio/avisado` | Marca el recordatorio como avisado. | 204 / 404 |
 
 El alta y la edición aceptan `repeticion` (`NINGUNA`, `DIARIA`, `HABILES`, `SEMANAL`, `MENSUAL`) y `recordatorio` (instante ISO); la respuesta suma `proximaRepeticion`. | `GET /api/estadisticas` | Números de la §4.14. | 200 |
+| `GET /api/exportar/json` | Respaldo completo, como archivo adjunto. | 200 |
+| `GET /api/exportar/csv` | Tareas en CSV (UTF-8 con BOM, punto y coma). | 200 |
+
+La documentación navegable de todos los endpoints, con sus esquemas, está en **`/api/docs`** (Swagger UI; el JSON OpenAPI en `/v3/api-docs`). La versión de la app se ve en el menú ⋯ y en `/actuator/info`.
 
 `DELETE /api/tareas/{id}` manda la tarea a la papelera. Los listados de tareas aceptan además `proyecto=<id>`. El alta y la edición de tareas aceptan `proyectoId`.
 

@@ -108,6 +108,13 @@ public class TareaService {
 		return mapper.aResponse(tarea, calendario.hoy());
 	}
 
+	/** Todas las tareas del usuario, de la más vieja a la más nueva (para respaldos y exportación). */
+	public List<TareaResponse> todas() {
+		LocalDate hoy = calendario.hoy();
+		return repository.findByUsuarioIdAndAmbitoOrderByCreadaEnAsc(usuario.id(), Ambito.PERSONAL).stream()
+				.map(t -> mapper.aResponse(t, hoy)).toList();
+	}
+
 	// ---------- Buscador (§4.11) ----------
 
 	private static final int MAXIMO_RESULTADOS = 30;

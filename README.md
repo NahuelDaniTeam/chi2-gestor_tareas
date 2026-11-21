@@ -26,8 +26,19 @@ Requisitos: Java 21 y Docker Desktop abierto.
 - Clic en una tarea abre el panel de edición; Escape lo cierra.
 - Lista o tablero: selector arriba a la derecha. En el tablero, arrastrá las tarjetas entre columnas.
 
+## Respaldos
+
+- La app guarda sola un respaldo JSON por día en `~/CHI2-Tareas/respaldos` (los últimos 30).
+- Menú ⋯ → **Exportar tareas (CSV)** o **Respaldo completo (JSON)**.
+- Base completa: `powershell -ExecutionPolicy Bypass -File scripts\respaldar-base.ps1`; para volver a un respaldo, `scripts\restaurar-base.ps1 -Archivo <archivo.sql>`.
+
+## API
+
+Documentación navegable en http://localhost:8082/api/docs (OpenAPI en `/v3/api-docs`).
+
 ## Documentación
 
 - [`CLAUDE.md`](CLAUDE.md): descripción del módulo, convenciones, arquitectura y forma de trabajo.
 - [`PENDIENTES.md`](PENDIENTES.md): qué falta y quién lo tiene.
 - [`docs/01-especificacion.md`](docs/01-especificacion.md): funcionalidad, modelo de datos y API.
+- [`CHANGELOG.md`](CHANGELOG.md): qué cambió en cada versión.
